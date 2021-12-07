@@ -30,7 +30,7 @@ MAS ia_submission {
 	
 		
 		/**** ADD YOUR AGENT(S) HERE *****/
-		agent_ scenario2_agent1 [capacity=0, scan_range=6, group=1] #2; // mindinspector="gui(cycle,html,history)"
+		agent_ scenario2_agent1 [capacity=2, scan_range=4, group=1] #1; // mindinspector="gui(cycle,html,history)"
 	aslSourcePath:
 		"src/asl";
 }

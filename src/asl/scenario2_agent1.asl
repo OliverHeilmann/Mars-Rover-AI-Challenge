@@ -113,18 +113,28 @@ resourceType("None"). //start with belief that can carry any resource
 			
 // plan failure
 -! collect_resource(Type, Num, X, Y) : true
-		<-	.print("!!!!!!!! collect_resource failed");
-			//.drop_all_desires;
-			.drop_intention;
-			//.drop_desire(resource_found(Type, Num, DX, DY));
-			.		
+		<-	.print("!!!!!!!! collect_resource failed");.		
 
 
-/* deposit_resource */
-+! deposit_resource(Type, Num)[source(Ag)] : Ag == self
-		<-	.print("Depositing ", Type);
+/* shuttle_resource */
+// now that we know multiple resources are on tile, shuttle them back to base
++! shuttle_resource(Type, Num)[source(Ag)] : Ag == self
+		<- .print("Shuttling remaining ", Type);
 		
-			// do moves, log and then clear memory
+			// Collect xNum of type 'Type'
+			rover.ia.check_config(MaxCapacity,_,_);
+			?carrying(Carrying);
+			for ( .range(I, 1, Num) ) {
+				if (I <= (MaxCapacity-Carrying)){
+					collect(Type);
+					-+carrying(Carrying + I);
+					.print("Carrying ", Carrying + I, " ", Type);
+				}
+			}
+			// must set rover resource type to collected type
+			-+resourceType(Type);
+			
+			// return to base, log and then clear memory (efficient route already passed)
 			rover.ia.get_distance_from_base(DX, DY);
 			mapping.efficientRoute(DX, DY, DXeff, DYeff);
 		   	rover.ia.log_movement(DXeff, DYeff);
@@ -132,7 +142,55 @@ resourceType("None"). //start with belief that can carry any resource
 			rover.ia.clear_movement_log;
 			
 			// Deposit xNum of type 'Type'
+			?carrying(ToDeposit);
+			for ( .range(J, 1, ToDeposit) ) {
+				deposit(Type);
+				-+carrying(ToDeposit - J);
+				.print("Carrying ", ToDeposit - J, " ", Type);
+			}
+			
+			// now move back to where initial scan was
+			Remaining = Num - ToDeposit;
+			.print("--------------> ", Remaining);
+			if (Remaining > 0 ){
+				.print("---> Collecting the rest of the resources");
+				rover.ia.log_movement(-DXeff, -DYeff);
+				move(-DXeff, -DYeff);
+				
+				// run shuttle plan
+				!shuttle_resource(Type, Remaining+1);
+			}
+			else {
+				?whereScanWas(X, Y);
+				mapping.efficientRoute(X, Y, Xeff, Yeff);
+				rover.ia.log_movement(-Xeff, -Yeff);
+				move(-Xeff, -Yeff);
+				.print("---> Now back at scan position");
+			}.
+
+// plan failure
+-! shuttle_resource(Type, Num, X, Y) : true
+		<- .print("!!!!!!!! shuttle_resource failed");.
+		
+
+/* deposit_resource */
++! deposit_resource(Type, Num)[source(Ag)] : Ag == self
+		<-	.print("Depositing ", Type);
+				
+			// do moves, log and then clear memory
+			rover.ia.get_distance_from_base(DX, DY);
+			mapping.efficientRoute(DX, DY, DXeff, DYeff);
+		   	rover.ia.log_movement(DXeff, DYeff);
+		   	move(DXeff, DYeff);
+			rover.ia.clear_movement_log;
+			
+			// How many resources do I have?
 			?carrying(Carrying);
+			
+			// Are there more resources back at loc?
+			Remaining = Num - Carrying;
+			
+			// Deposit xNum of type 'Type'
 			for ( .range(I, 1, Carrying) ) {
 				deposit(Type);
 				-+carrying(Carrying - I);
@@ -140,19 +198,25 @@ resourceType("None"). //start with belief that can carry any resource
 			}
 			
 			// now move back to where initial scan was
-			?whereScanWas(X, Y);
-			mapping.efficientRoute(X, Y, Xeff, Yeff);
-			rover.ia.log_movement(-Xeff, -Yeff);
-			move(-Xeff, -Yeff);
-			.print("---> Now back at scan position");.
+			if (Remaining > 0 ){
+				.print("---> Collecting the rest of the resources");
+				rover.ia.log_movement(-DXeff, -DYeff);
+				move(-DXeff, -DYeff);
+				
+				// run shuttle plan
+				!shuttle_resource(Type, Remaining);
+			}
+			else {
+				?whereScanWas(X, Y);
+				mapping.efficientRoute(X, Y, Xeff, Yeff);
+				rover.ia.log_movement(-Xeff, -Yeff);
+				move(-Xeff, -Yeff);
+				.print("---> Now back at scan position");
+			}.
 
 // plan failure	
 -! deposit_resource(Type, Num) : true
-		<-	.print("!!!!!!!! deposit_resource failed");
-			//.drop_all_desires;
-			//.drop_intention;
-			//.drop_desire(resource_found(Type, Num, DX, DY));
-			.
+		<-	.print("!!!!!!!! deposit_resource failed");.
 
 
 /* ------------- Triggered Beliefs ------------- */
@@ -173,7 +237,6 @@ resourceType("None"). //start with belief that can carry any resource
 			?whereScanWas(DXme, DYme);
 			mapping.updateMap(Type, DXme, DYme, DX, DY, Num);
 		
-			
 			// is it a resource?
 			if (Type == "Gold" | Type == "Diamond"){
 				// can I carry the resource?
