@@ -16,11 +16,16 @@ public class initMap extends DefaultInternalAction {
         
         int width = (int)((NumberTerm) args[0]).solve();
     	int height = (int)((NumberTerm) args[1]).solve();
-    	String agentName = args[2].toString();
+    	int scanRange = (int)((NumberTerm) args[2]).solve();
+    	String agentName = args[3].toString();
     	
     	// initialise matrix map size (first agent does it)
         if (agentName.equals("agent_") || agentName.equals("agent_1")) {
-            object.init(width, height);
+            // create matrix of game dims
+        	object.init(width, height);
+            
+        	// create matrix of agent scan coverage area
+            object.scanCoverageArea(scanRange);
         }
 
         // everything ok, so returns true

@@ -25,8 +25,9 @@ resourceType("None"). //start with belief that can carry any resource
 			rover.ia.get_map_size(Width,Height);
 			
 			// setup singleton empty map of scene
+			rover.ia.check_config(_,Scanrange,_);
 			.my_name(Me);
-			mapping.initMap(Width, Height, Me);
+			mapping.initMap(Width, Height, Scanrange, Me);
 
 			// now can start scanning and moving
 			!scan_move;.
@@ -46,6 +47,11 @@ resourceType("None"). //start with belief that can carry any resource
 			
 			// scan with pre-defined range
 			rover.ia.check_config(_,Scanrange,_);
+			
+			// update map with scan area
+			//mapping.updateScanArea(Scanrange, Xrem, Yrem);
+			
+			// now actaully scan
 		   	scan(Scanrange);
 
 		   	?randomwalk_max(N);
