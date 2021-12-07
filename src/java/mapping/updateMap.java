@@ -34,7 +34,6 @@ public class updateMap extends DefaultInternalAction {
 
     	// call updateMap function and update map with passed values
         object.updateMap(asset, me_to_base, me_to_asset, quantity);
-        //Thread.sleep(250); // small delay to pause agent before next map update (solving memory issues)
 
         // everything ok, so returns true
         return true;

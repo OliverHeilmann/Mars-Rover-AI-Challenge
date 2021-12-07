@@ -72,66 +72,8 @@ public class mapSingleton {
            }    
        }    
    }
-   
-   // Initialise the scan coverage matrix- will be used for updating map
-   public int[][] scanCoverageMatrix;
-   public void scanCoverageArea(int scan_range) {
-	   // Update scanCoverageMatrix to be the size of the game
-	   scanCoverageMatrix = new int[2*scan_range +1][2*scan_range +1];
-	   
-		// Make all values of scanCoverageMatrix = 0
-		for (int i = 0; i < scanCoverageMatrix.length; i++) {
-			for (int j = 0; j < scanCoverageMatrix[i].length; j++) {
-				scanCoverageMatrix[i][j] = 0;
-			}
-		}
-	
-		// now append 1s to the corresponding cells which the scan reaches
-		int i,j,r;
-		int N = 0; // shift row
-		int M = 0; // shift col
-		int shift = 0;
-		r = scan_range+1;
-		
-		// top half plus middle
-		for(i=0; i<=r; i++) {
-			shift = 0;
-			for(j=1;j<=r-i;j++) { 
-				shift += 1;
-			}
-			for(j=1;j<=2*i-1;j++) {
-				scanCoverageMatrix[i-1+N][j-1+shift+M] = 1;
-			}
-		}
-		
-		// bottom half minus middle
-		for(i=r-1;i>=1;i--) {
-			shift = 0;
-			for(j=1;j<=r-i;j++) {
-				shift += 1;
-			}
-			for(j=1;j<=2*i-1;j++) {
-				scanCoverageMatrix[2*scan_range+1 - i+N][j-1+shift+M] = 1;
-			}
-		}
-		return;
-	}
-   
-   
-   // Print the agent scan range in console if requested
-   public void showScanRange() {
-	   String matVal;
-	   for (int ii = 0; ii < scanCoverageMatrix.length; ii++) {
-		   for (int jj = 0; jj < scanCoverageMatrix[ii].length; jj++) {
-			   matVal = Integer.toString(scanCoverageMatrix[ii][jj]) + ", ";
-			   System.out.print(matVal);
-		   }
-		   System.out.println("");
-	   }
-	   return;
-   }
-   
-   
+
+   /*
    public void showNeighbourCoords(int scan_range, Integer [] coords) {
 	   // setup variables for appending to matrix
 	   int matSize = 2*scan_range+1;
@@ -155,11 +97,13 @@ public class mapSingleton {
 			   int asset_to_baseX = matrixAdjust(coords[0] - (j-1+shift-centre));
 			   int asset_to_baseY = matrixAdjust(coords[1] - (i-1-centre));
 			   
-			   if (wholeMap[asset_to_baseX][asset_to_baseY] != resourceDict_s2i.get("Obstacle")) {
+			   int cond1 = resourceDict_s2i.get("Obstacle");
+			   int cond2 = resourceDict_s2i.get("Base");
+			   int curr = wholeMap[asset_to_baseX][asset_to_baseY];
+			   
+			   if (curr != cond1 | curr != cond2) {
 				   wholeMap[asset_to_baseX][asset_to_baseY] = resourceDict_s2i.get("Empty");
-			   }
-			   
-			   
+			   } 
 		   }
 	   }
 	   
@@ -176,13 +120,16 @@ public class mapSingleton {
 			   int asset_to_baseX = matrixAdjust(coords[0] - (j-1+shift-centre));
 			   int asset_to_baseY = matrixAdjust( coords[1] + (i-1-centre));
 			   
-			   if (wholeMap[asset_to_baseX][asset_to_baseY] != resourceDict_s2i.get("Obstacle")) {
+			   int cond1 = resourceDict_s2i.get("Obstacle");
+			   int cond2 = resourceDict_s2i.get("Base");
+			   int curr = wholeMap[asset_to_baseX][asset_to_baseY];
+			   
+			   if (curr != cond1 | curr != cond2) {
 				   wholeMap[asset_to_baseX][asset_to_baseY] = resourceDict_s2i.get("Empty");
 			   }
-			   
 		   }
 	   }
-	   /*
+	   
 	   // print out mat
 	   String matVal;
 	   for (int ii = 0; ii < myMat.length; ii++) {
@@ -195,10 +142,10 @@ public class mapSingleton {
 		   }
 		   System.out.println("");
 	   }
-	   */
+	   
 	   return;
    }
-  
+  */
 
    // Function to correct for distances to base greater than the base max
    // dimensions. This is used because the map wraps! This assumes square

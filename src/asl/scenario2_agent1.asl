@@ -75,13 +75,13 @@ resourceType("None"). //start with belief that can carry any resource
 /* collect_resource */
 // collect resource then return to base
 +! collect_resource(Type, Num, X, Y)[source(Ag)] : Ag == self
-		<- .print("Collecting ", Type);
+		<-	.print("Collecting ", Type);
 		
 			// move to location (if at resource and can carry more, move to it directly)
 			?whereScanWas(Xscan, Yscan);
 			rover.ia.get_distance_from_base(Xbase, Ybase);
 
-			// efficient route optimisation
+			// efficient route optimisation (continue collecting if capacity > 0)
 			mapping.efficientRoute(Xbase + X -Xscan, Ybase + Y -Yscan, Xeff, Yeff);
 		   	rover.ia.log_movement(Xeff, Yeff);
 		   	move(Xeff, Yeff);
@@ -108,7 +108,7 @@ resourceType("None"). //start with belief that can carry any resource
 			}.
 			
 // plan failure
--! collect_resource(_,_,_) : true <- .print("!!!!!!!! collect_resource failed");.			
+-! collect_resource(Type, Num, X, Y) : true <- .print("!!!!!!!! collect_resource failed");.			
 
 
 /* deposit_resource */
@@ -138,7 +138,7 @@ resourceType("None"). //start with belief that can carry any resource
 			.print("---> Now back at scan position");.
 
 // plan failure	
--! deposit_resource : true <- .print("!!!!!!!! deposit_resource failed");.
+-! deposit_resource(Type, Num) : true <- .print("!!!!!!!! deposit_resource failed");.
 
 
 /* ------------- Triggered Beliefs ------------- */
@@ -155,8 +155,8 @@ resourceType("None"). //start with belief that can carry any resource
 + resource_found(Type, Num, DX, DY)[source(Ag)] : Ag == percept
 		<-	.print(Type, " found");
 		
-			// map resource to shared singleton map
-			rover.ia.get_distance_from_base(DXme, DYme);
+			// map resource to shared singleton map with scan coordinates
+			?whereScanWas(DXme, DYme);
 			mapping.updateMap(Type, DXme, DYme, DX, DY, Num);
 		
 			// is it a resource?
@@ -164,7 +164,7 @@ resourceType("None"). //start with belief that can carry any resource
 				// can I carry the resource?
 				?resourceType(MyType);
 				if (MyType == "None" | MyType == Type){
-					// passed checks, collect resource
+					// passed checks, collect the resource
 					!collect_resource(Type, Num, DX, DY);
 				}
 			}.

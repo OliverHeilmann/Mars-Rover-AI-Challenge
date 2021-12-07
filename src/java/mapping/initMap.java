@@ -23,9 +23,6 @@ public class initMap extends DefaultInternalAction {
         if (agentName.equals("agent_") || agentName.equals("agent_1")) {
             // create matrix of game dims
         	object.init(width, height);
-            
-        	// create matrix of agent scan coverage area
-            object.scanCoverageArea(scanRange);
         }
 
         // everything ok, so returns true

@@ -25,7 +25,7 @@ public class updateScanArea extends DefaultInternalAction {
     	me_to_base[1] = dy;
 
 		// create matrix of agent scan coverage area
-    	object.showNeighbourCoords(scan_range, me_to_base);
+    	//object.showNeighbourCoords(scan_range, me_to_base);
     	
         // everything ok, so returns true
         return true;
