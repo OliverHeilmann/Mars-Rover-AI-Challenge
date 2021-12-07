@@ -59,11 +59,11 @@ resourceType("None"). //start with belief that can carry any resource
 		   	mapping.printMap(Me);
 		
 			// make a random move with range N
-		   	?randomwalk_max(N);
-			movement.random_walk(N, X, Y, C);
+		   	//?randomwalk_max(N);
+			//movement.random_walk(N, X, Y, C);
 			
 			// go to the best scan location
-			movement.newScanLoc(Xrem, Yrem, Scanrange, Xnew, Ynew); //Xnew, Ynew
+			movement.newScanLoc(Xrem, Yrem, Scanrange, X, Y); //Xnew, Ynew
 
 		   	// don't log until it is completed (see action_completed)
 		   	mapping.efficientRoute(X, Y, Xeff, Yeff);

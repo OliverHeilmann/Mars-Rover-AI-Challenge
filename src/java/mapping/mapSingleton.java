@@ -261,10 +261,10 @@ public class mapSingleton {
            for (int j = 0; j < wholeMap[i].length; j++) {
         	   
         	   // get optimised route distance TO TILE (from agent)
-        	   me_to_tileX = matrixAdjust(myD_base[0] - j);
+        	   me_to_tileX = matrixAdjust(myD_base[0] - matrixAdjust(j));
         	   me_to_tileX = mapAdjust(me_to_tileX);
         	   
-        	   me_to_tileY = matrixAdjust(myD_base[1] - i);
+        	   me_to_tileY = matrixAdjust(myD_base[1] - matrixAdjust(i));
         	   me_to_tileY = mapAdjust(me_to_tileY);
         	   
         	   // calculate distance score (X + Y, where X&Y are +ve and larger is worse)
@@ -280,25 +280,10 @@ public class mapSingleton {
         			   shift += 1;
         		   }
         		   for (int jj=1; jj<=2*ii-1; jj++) {
-        			   
-        			   // adjust for matrix dims
-        			   int tile_to_baseX = matrixAdjust(-j - (jj-1+shift-centre));
-        			   int tile_to_baseY = matrixAdjust(-i - (ii-1-centre));
-        			   
-        			   /*
-        			   // print out best scan location to check
-        			   String P = "Mat Pos: " + Integer.toString(tile_to_baseX) + ", " + 
-        					   					 Integer.toString(tile_to_baseY);
-        			   P = P + " || cell item == " + Integer.toString(wholeMap[tile_to_baseY][tile_to_baseX]);
-
-        			   System.out.println(P);
-        			   */
-        			   /*
         			   // adjust for matrix dims by taking the agent coordinates first and then
         			   // checking the entire map for the score for each tile position.
-        			   int tile_to_baseX = matrixAdjust(myD_base[0] + j - (jj-1+shift-centre));
-        			   int tile_to_baseY = matrixAdjust(myD_base[1] + i - (ii-1-centre));
-        			   */
+        			   int tile_to_baseX = matrixAdjust(-j - (jj-1+shift-centre));
+        			   int tile_to_baseY = matrixAdjust(-i - (ii-1-centre));
         			   
         			   // if tile data is 0 (for unscanned), then this is a good place to scan, +1 point
         			   if (wholeMap[tile_to_baseY][tile_to_baseX] == 0) {
@@ -314,25 +299,10 @@ public class mapSingleton {
         			   shift += 1;
         		   }
         		   for (int jj=1; jj<=2*ii-1; jj++) {
-        			   
-        			   // adjust for matrix dims
-        			   int tile_to_baseX = matrixAdjust(-j - (jj-1+shift-centre));
-        			   int tile_to_baseY = matrixAdjust(-i + (ii-1-centre)); // NOTICE THIS IS +VE!!!
-        			   
-        			   /*
-        			   // print out best scan location to check
-        			   String P = "Mat Pos: " + Integer.toString(tile_to_baseX) + ", " + 
-        					   					 Integer.toString(tile_to_baseY);
-        			   P = P + " || cell item == " + Integer.toString(wholeMap[tile_to_baseY][tile_to_baseX]);
-        			   
-        			   System.out.println(P);
-        			   */
-        			   /*
         			   // adjust for matrix dims by taking the agent coordinates first and then
         			   // checking the entire map for the score for each tile position.
-        			   int tile_to_baseX = matrixAdjust(myD_base[0] + j - (jj-1+shift-centre));
-        			   int tile_to_baseY = matrixAdjust(myD_base[1] + i + (ii-1-centre));
-        			   */
+        			   int tile_to_baseX = matrixAdjust(-j - (jj-1+shift-centre));
+        			   int tile_to_baseY = matrixAdjust(-i + (ii-1-centre)); // NOTICE THIS IS +VE!!!
         			   
         			   // if tile data is 0 (for unscanned), then this is a good place to scan, +1 point
         			   if (wholeMap[tile_to_baseY][tile_to_baseX] == 0) {
@@ -342,50 +312,48 @@ public class mapSingleton {
         		   }
         	   }
         	   
-        	   // print score out
-        	   System.out.print(scan_score);
-        	   //System.out.print(",");
-        	   //System.out.print(j);
+        	   // print score matrix out
+        	   System.out.format("%d", scan_score);
         	   System.out.print(", ");
-        	   /*
-        	   System.out.print("----> SCAN SCORE: ");
-        	   System.out.print(scan_score);
-        	   System.out.println("");
-        	   System.out.println("");
-        	   System.out.println("");
-				*/
-        	   /*
+        	   System.out.format("%d", (distance_score+1));
+        	   System.out.print(", ");
+        	   System.out.format("%.2f", scan_score / (distance_score+1.0));
+
+        	   
+        	   
         	   // now check if scan_score/distance_score is bigger than the previously stored total_score
         	   // remember, we are only interested in finding the best place to scan...
         	   // now we also store the distance the agent must travel to get there...
         	   // note, we +1 to distance_score to avoid / by 0 error
-        	   if ((scan_score / (distance_score+1)) > total_score) {
+        	   if ((scan_score / (distance_score+1.0)) > total_score) {
         		   
         		   // calculate new total score
-        		   total_score = scan_score / (distance_score+1);
+        		   total_score = scan_score / (distance_score+1.0);
+        		   
+        		   //System.out.format("Total: %.2f", total_score);
+        		   //System.out.println("");
+        		   System.out.print("!!");
 
         		   // update the movement coordinates to give the agent
-        		   theScanLocation[0] = me_to_tileX;
-        		   theScanLocation[1] = me_to_tileY;
-        	   }
-        	   */
+        		   theScanLocation[0] = mapAdjust(j - matrixAdjust(myD_base[0]));
+        		   theScanLocation[1] = mapAdjust(i - matrixAdjust(myD_base[1]));
+        		   
+        		   /*
+        		   System.out.print(me_to_tileX);
+        		   System.out.print(", ");
+        		   System.out.println(me_to_tileY);
+        		   */
+        	   	}
+        	   System.out.print(" | ");
+        	   
            }
     	   System.out.println("");
-    	   /*
-    	   System.out.println("");
-    	   System.out.println("");
-    	   System.out.println("");
-    	   System.out.println("");
-    	   System.out.println("");
-    	   System.out.println("");
-    	   System.out.println("");
-    	   */
        }
 	   
 	   // print out best scan location to check
-	   String Out = "My Loc: " + Integer.toString(myD_base[0]) + ", " + 
+	   String Out = "My D2B: " + Integer.toString(myD_base[0]) + ", " + 
 			   					 Integer.toString(myD_base[1]) + " || " +
-			   		"Best location to scan is (" + Integer.toString(theScanLocation[0]) + ", " 
+			   		"Best map coord to scan is (" + Integer.toString(theScanLocation[0]) + ", " 
 		   										 + Integer.toString(theScanLocation[1]) + "), ";
 	   System.out.println(Out);
 	   
