@@ -239,11 +239,10 @@ public class mapSingleton {
    
    // look at values from current map and select a location with maximum scan effectiveness
    public int[] scanNewArea(Integer[] myD_base, int scanRange){
-	   
-	   showMap();
-	   
 	   // create placeholder for 1D array containing (dx, dy) from current agent position
-	   int[] theScanLocation = new int[2];
+	   int[] theScanLocation = new int[3];
+	   theScanLocation[2] = 0; // set this to 1 when the whole map has been scanned
+	   
 	   Integer me_to_tileX, me_to_tileY;
 	   double total_score = 0.;
 	   
@@ -253,8 +252,6 @@ public class mapSingleton {
 	   myMat = new int[matSize][matSize][2];
 	   int r = scanRange+1;
 	   int shift;
-	   
-	   String matVal;
 
 	   // loop through current map and find best distance score
 	   for (int i = 0; i < wholeMap.length; i++) {
@@ -312,15 +309,6 @@ public class mapSingleton {
         		   }
         	   }
         	   
-        	   // print score matrix out
-        	   System.out.format("%d", scan_score);
-        	   System.out.print(", ");
-        	   System.out.format("%d", (distance_score+1));
-        	   System.out.print(", ");
-        	   System.out.format("%.2f", scan_score / (distance_score+1.0));
-
-        	   
-        	   
         	   // now check if scan_score/distance_score is bigger than the previously stored total_score
         	   // remember, we are only interested in finding the best place to scan...
         	   // now we also store the distance the agent must travel to get there...
@@ -330,32 +318,18 @@ public class mapSingleton {
         		   // calculate new total score
         		   total_score = scan_score / (distance_score+1.0);
         		   
-        		   //System.out.format("Total: %.2f", total_score);
-        		   //System.out.println("");
-        		   System.out.print("!!");
-
         		   // update the movement coordinates to give the agent
         		   theScanLocation[0] = mapAdjust(j - matrixAdjust(myD_base[0]));
         		   theScanLocation[1] = mapAdjust(i - matrixAdjust(myD_base[1]));
-        		   
-        		   /*
-        		   System.out.print(me_to_tileX);
-        		   System.out.print(", ");
-        		   System.out.println(me_to_tileY);
-        		   */
-        	   	}
-        	   System.out.print(" | ");
-        	   
+        	   }
            }
-    	   System.out.println("");
        }
 	   
-	   // print out best scan location to check
-	   String Out = "My D2B: " + Integer.toString(myD_base[0]) + ", " + 
-			   					 Integer.toString(myD_base[1]) + " || " +
-			   		"Best map coord to scan is (" + Integer.toString(theScanLocation[0]) + ", " 
-		   										 + Integer.toString(theScanLocation[1]) + "), ";
-	   System.out.println(Out);
+	   // final checks to see if the map has been completely scanned...
+	   // if yes, then set 0 to 1 to show ASL code that process is done
+	   if ( total_score <= 0) {
+		   theScanLocation[2] = 1;
+	   }
 	   
 	   // return results to internal action function (newScanLoc())
 	   return theScanLocation;

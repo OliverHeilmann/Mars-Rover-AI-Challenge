@@ -39,7 +39,7 @@ resourceType("None"). //start with belief that can carry any resource
 /* scan_move */
 // perform scan then move plan
 +! scan_move[source(Ag)] : Ag == self
-		<-	.print("Making random move...");
+		<-	.print("Agent making a move...");
 		
 			// remember where the scan was made
 			rover.ia.get_distance_from_base(Xrem, Yrem);
@@ -57,14 +57,15 @@ resourceType("None"). //start with belief that can carry any resource
 		   	// print map now (only main agent prints map to console)
 		   	.my_name(Me);
 		   	mapping.printMap(Me);
-		
+		   	
 			// make a random move with range N
-		   	//?randomwalk_max(N);
+			?randomwalk_max(N);
 			//movement.random_walk(N, X, Y, C);
-			
-			// go to the best scan location
-			movement.newScanLoc(Xrem, Yrem, Scanrange, X, Y); //Xnew, Ynew
 
+			// go to the best scan location
+			//?randomwalk_max(N); // for when all map is scanned
+			movement.newScanLoc(Xrem, Yrem, Scanrange, N, X, Y, FullyScanned);
+			
 		   	// don't log until it is completed (see action_completed)
 		   	mapping.efficientRoute(X, Y, Xeff, Yeff);
 		   	rover.ia.log_movement(Xeff, Yeff);
@@ -108,11 +109,15 @@ resourceType("None"). //start with belief that can carry any resource
 			if (Amount >= MaxCapacity){
 				//return to base
 				!deposit_resource(Type, Num);
-				//.drop_desire(scan_move);
 			}.
 			
 // plan failure
--! collect_resource(Type, Num, X, Y) : true <- .print("!!!!!!!! collect_resource failed");.			
+-! collect_resource(Type, Num, X, Y) : true
+		<-	.print("!!!!!!!! collect_resource failed");
+			//.drop_all_desires;
+			.drop_intention;
+			//.drop_desire(resource_found(Type, Num, DX, DY));
+			.		
 
 
 /* deposit_resource */
@@ -142,7 +147,12 @@ resourceType("None"). //start with belief that can carry any resource
 			.print("---> Now back at scan position");.
 
 // plan failure	
--! deposit_resource(Type, Num) : true <- .print("!!!!!!!! deposit_resource failed");.
+-! deposit_resource(Type, Num) : true
+		<-	.print("!!!!!!!! deposit_resource failed");
+			//.drop_all_desires;
+			//.drop_intention;
+			//.drop_desire(resource_found(Type, Num, DX, DY));
+			.
 
 
 /* ------------- Triggered Beliefs ------------- */
@@ -163,6 +173,7 @@ resourceType("None"). //start with belief that can carry any resource
 			?whereScanWas(DXme, DYme);
 			mapping.updateMap(Type, DXme, DYme, DX, DY, Num);
 		
+			
 			// is it a resource?
 			if (Type == "Gold" | Type == "Diamond"){
 				// can I carry the resource?
