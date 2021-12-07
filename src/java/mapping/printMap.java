@@ -19,9 +19,11 @@ public class printMap extends DefaultInternalAction {
         
         // check if main agent
         if (agentName.equals("agent_") || agentName.equals("agent_1")) {
-        	object.showMap();
+        	// show singleton map of game table
+        	//object.showMap();
         	
-        	//object.showScanRange();
+        	// show scan range map (coords are x,y to base)
+        	//object.showNeighbourMatrix();
         }
 
         // everything ok, so returns true

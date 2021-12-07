@@ -44,27 +44,31 @@ resourceType("None"). //start with belief that can carry any resource
 			// remember where the scan was made
 			rover.ia.get_distance_from_base(Xrem, Yrem);
 			-+whereScanWas(Xrem, Yrem);
-			
+
 			// scan with pre-defined range
 			rover.ia.check_config(_,Scanrange,_);
 			
 			// update map with scan area
-			//mapping.updateScanArea(Scanrange, Xrem, Yrem);
+			mapping.updateScanArea(Scanrange, Xrem, Yrem);
 			
 			// now actaully scan
 		   	scan(Scanrange);
-
+		   	
+		   	// print map now (only main agent prints map to console)
+		   	.my_name(Me);
+		   	mapping.printMap(Me);
+		
+			// make a random move with range N
 		   	?randomwalk_max(N);
 			movement.random_walk(N, X, Y, C);
+			
+			// go to the best scan location
+			movement.newScanLoc(Xrem, Yrem, Scanrange, Xnew, Ynew); //Xnew, Ynew
 
 		   	// don't log until it is completed (see action_completed)
 		   	mapping.efficientRoute(X, Y, Xeff, Yeff);
 		   	rover.ia.log_movement(Xeff, Yeff);
 		   	move(Xeff, Yeff);
-		   	
-		   	// only main agent prints map to console
-		   	.my_name(Me);
-		   	mapping.printMap(Me);
 
 		   	!scan_move.
 		   	
