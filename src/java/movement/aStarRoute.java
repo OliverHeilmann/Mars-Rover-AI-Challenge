@@ -3,6 +3,7 @@
 package movement;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import jason.*;
 import jason.asSemantics.*;
@@ -34,9 +35,23 @@ public class aStarRoute extends DefaultInternalAction {
     	tile_to_base[1] = end_dy;
 
     	// now calculate the best route to take from start to end points
-    	ArrayList<int[]> agentPath = object.calcAStarRoute(me_to_base, tile_to_base);
+    	List<List<Integer>> agentPath = object.calcAStarRoute(me_to_base, tile_to_base);
     	
-    	//System.out.println(agentPath);
+    	System.out.println("-------------------------");
+    	
+    	// print to make sure it has come through ok
+        for (List<Integer> cmd : agentPath) {
+
+        	Integer  dx = cmd.get(0);
+        	Integer dy = cmd.get(1);
+        	
+        	
+        	System.out.print(dx);
+        	System.out.print(", ");
+            System.out.println(dy);
+            
+        }
+    	
     	
         // everything ok, so returns true
         return true;

@@ -6,6 +6,7 @@ import java.util.Map;
 import mapping.mapSingleton;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -566,7 +567,7 @@ public class mapSingleton {
 
    
    // main function to run a route through the maze
-   public ArrayList<int[]> calcAStarRoute(int[] startPoint, int[] endPoint) {
+   public List<List<Integer>> calcAStarRoute(int[] startPoint, int[] endPoint) {
 	   
 	   	// update the obstacle map before plotting a route (obstacleMap)
 	   	updateObstacleMap();
@@ -586,26 +587,25 @@ public class mapSingleton {
 	   	int tileState = obstacleMap[endX][endY];
 	   	obstacleMap[endX][endY] = 0;
 	   	
-	   	/*
+	   	
 	   	// print out start and end points for debugging
 	   	String P = "---> " + Integer.toString(startX) + "," + Integer.toString(startY) + 
 	   				" || " + Integer.toString(endX) + "," + Integer.toString(endY);
 	   	System.out.print(P);
 	   	System.out.println("");
-	   	*/
+	   	
 	   	
 	   	// reformat coordinates to points for A* algorithm
         Point start = new Point(startX, startY, null);
         Point end = new Point(endX, endY, null);
         
         // make array and arraylist for returning to aStarRoute internal action
-        int[] passCoords = new int[2];
-        ArrayList<int[]> coordsList = new ArrayList<int[]>();
+        List<List<Integer>> coordList = new ArrayList<List<Integer>>();
         
         // store previous steps
         int prevX = 0;
         int prevY = 0;
-        
+
         // now find path and print it to console
         List<Point> path = FindPath(obstacleMap, start, end);
         if (path != null) {
@@ -619,24 +619,13 @@ public class mapSingleton {
          	   	int me_to_tileY = matrixAdjust(matrixAdjust(point.y) - startPoint[1]);
          	   	me_to_tileY = mapAdjust(me_to_tileY);
          	   	
-         	   	// now add the command to the array DX, then update previous step to current
-         	   	passCoords[0] = me_to_tileX - prevX;
-         	   	prevX = me_to_tileX;
+         	   	// add dx, dy to coordinate list
+         	   	coordList.add(Arrays.asList(mapAdjust(me_to_tileX - prevX),
+         	   								mapAdjust(me_to_tileY - prevY)));
          	   	
-         	   	// now add the command to the array DY, then update previous step to current
-         	   	passCoords[1] = me_to_tileY - prevY;
+         	   	// update previous step to equal current (for next step)
+         	   	prevX = me_to_tileX;
          	   	prevY = me_to_tileY;
-            	
-         	   	/*
-        	   	// print out start and end points for debugging
-        	   	String P2 = Integer.toString(point.x) + "," + Integer.toString(point.y) + 
-        	   				" || " + Integer.toString(passCoords[0]) + "," + Integer.toString(passCoords[1]);
-        	   	System.out.print(P2);
-        	   	System.out.println("");
-        	   	*/
-
-        	   	// now finally the coordinates to the arraylist
-        	   	coordsList.add(passCoords);
             }
         }
         else {System.out.println("-------------------------> No path found");}
@@ -645,7 +634,7 @@ public class mapSingleton {
         obstacleMap[endX][endY] = tileState;
         
         // return the array of coordinates the agent should travel via
-        return coordsList;
+        return coordList;
     }
 }
 
