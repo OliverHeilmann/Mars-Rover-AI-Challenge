@@ -628,7 +628,10 @@ public class mapSingleton {
          	   	prevY = me_to_tileY;
             }
         }
-        else {System.out.println("-------------------------> No path found");}
+        else {
+        	System.out.println("-------------------------> No path found");
+        	//coordList.add(Arrays.asList(-999,-999));
+        }
         
         // reset tileState to its initial state
         obstacleMap[endX][endY] = tileState;

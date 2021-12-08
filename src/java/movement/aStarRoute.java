@@ -4,6 +4,7 @@ package movement;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import jason.*;
 import jason.asSemantics.*;
@@ -26,6 +27,9 @@ public class aStarRoute extends DefaultInternalAction {
         int end_dx = (int)((NumberTerm) args[2]).solve();
     	int end_dy = (int)((NumberTerm) args[3]).solve();
     	
+    	// get limits of maxDelta --> will be used to set limit of dX and dY
+    	int maxDelta = (int)((NumberTerm) args[4]).solve();
+    	
     	// Create an array for passing to the SingleObject class function
     	int[] me_to_base = new int[2];
     	int[] tile_to_base = new int[2];
@@ -37,31 +41,60 @@ public class aStarRoute extends DefaultInternalAction {
     	// now calculate the best route to take from start to end points
     	List<List<Integer>> agentPath = object.calcAStarRoute(me_to_base, tile_to_base);
     	
+    	System.out.print("----------------------------");
+    	System.out.println(agentPath.size());
+    	
     	// create list of listterms to pass back to ASL code
     	ListTermImpl aStarMoves = new ListTermImpl();
-        for (List<Integer> cmd : agentPath) {
+    	
+    	// check if a result was returned
+    	if (agentPath.size() > 0) {
+    		
+    		// some coords recieved, move to them
+	        for (List<Integer> cmd : agentPath) {
+	        	// init inner listterm
+	        	ListTermImpl innerList = new ListTermImpl();
+	
+	        	// convert ints to terms
+	        	NumberTermImpl dxNumTerm = new NumberTermImpl(cmd.get(0));
+	        	NumberTermImpl dyNumTerm = new NumberTermImpl(cmd.get(1));
+	
+	        	// add to inner list
+	        	innerList.add(dxNumTerm);
+	        	innerList.add(dyNumTerm);
+	        	
+	        	/*
+	        	System.out.print(dxNumTerm);
+	        	System.out.print(", ");
+	            System.out.println(dyNumTerm);
+	            */
+	            
+	            // add to total list
+	            aStarMoves.add(innerList);
+	        }
+    	}
+    	// else return 1 move of random values (to stop agents getting stuck)
+    	else {
         	// init inner listterm
         	ListTermImpl innerList = new ListTermImpl();
-
+        	
+        	// set random scan area to DX, DY
+    		int randX = ThreadLocalRandom.current().nextInt(-maxDelta, maxDelta);
+    		int randY = ThreadLocalRandom.current().nextInt(-maxDelta, maxDelta);
+        	
         	// convert ints to terms
-        	NumberTermImpl dxNumTerm = new NumberTermImpl(cmd.get(0));
-        	NumberTermImpl dyNumTerm = new NumberTermImpl(cmd.get(1));
+        	NumberTermImpl dxNumTerm = new NumberTermImpl(randX);
+        	NumberTermImpl dyNumTerm = new NumberTermImpl(randY);
 
         	// add to inner list
         	innerList.add(dxNumTerm);
         	innerList.add(dyNumTerm);
         	
-        	/*
-        	System.out.print(dxNumTerm);
-        	System.out.print(", ");
-            System.out.println(dyNumTerm);
-            */
-            
             // add to total list
             aStarMoves.add(innerList);
-        }
+    	}
         
         // everything ok, so returns true
-        return true;
+        return un.unifies(aStarMoves, args[5]);
     }
 }

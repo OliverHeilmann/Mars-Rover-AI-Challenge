@@ -45,6 +45,29 @@ resourceType("None"). //start with belief that can carry any resource
 -! init : true	<-	.print("!!!!!!!! init failed");.
 
 
+/* aStarMovement */
+// use the input starting and ending points to calculate the A* movement based on map information
++! aStarMovement(Xstart, Ystart, X, Y, N, AstarList)[source(Ag)] : Ag == self
+		<-	.print("Moving with A* optimisation");
+		
+			// get A* route between current position and intended, unify with AstarList
+			movement.aStarRoute(Xstart, Ystart, X, Y, N, AstarList);
+
+			// now loop through list and do the A* moves!
+			for ( .member(Move, AstarList) ){
+				// unpack values from move
+				.nth(0,Move,XaStar);
+				.nth(1,Move,YaStar);
+				
+				// log move, then actually move
+				rover.ia.log_movement(XaStar, YaStar);
+				move(XaStar, YaStar)
+			};.
+
+// plan failure
+-! aStarMovement : true	<-	.print("!!!!!!!! aStarMovement failed");.			
+
+
 /* deposit_remaining_resources */
 // if there is nothing else to do, go back to the base and deposit resources
 +! deposit_remaining_resources[source(Ag)] : Ag == self
@@ -107,9 +130,6 @@ resourceType("None"). //start with belief that can carry any resource
 			?resourceType(Type);
 			movement.newScanLoc(Xrem, Yrem, Scanrange, Type, Num, N, X, Y);
 			
-			// testing A* search
-			movement.aStarRoute(Xrem, Yrem, X, Y);
-			
 			// if dir = -999 then this means agent should RTB and deposit resources	   	
 		   	if (X == -999 & Y == -999){
 		   		.print("Nothing left to do, will RTB to deposit");
@@ -120,11 +140,14 @@ resourceType("None"). //start with belief that can carry any resource
 		   		// we are depositing resources to base (new plan)
 		   		!deposit_remaining_resources;
 		   	}
+		   	
+		   	// do the moves to intended location (with A*, not simple movement)
+			!aStarMovement(Xrem, Yrem, X, Y, N, AstarList);
 			
-		   	// log before taking move (for obstructed belief) 
-		   	mapping.efficientRoute(X, Y, Xeff, Yeff);
-		   	rover.ia.log_movement(Xeff, Yeff);
-		   	move(Xeff, Yeff);
+			// log before taking move (for obstructed belief) 
+		   	//mapping.efficientRoute(X, Y, Xeff, Yeff);
+		   	//rover.ia.log_movement(Xeff, Yeff);
+		   	//move(Xeff, Yeff);
 
 			// loop back to start
 		   	!scan_move;.
