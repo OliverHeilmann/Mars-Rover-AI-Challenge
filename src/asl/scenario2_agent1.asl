@@ -28,7 +28,16 @@ resourceType("None"). //start with belief that can carry any resource
 			rover.ia.check_config(_,Scanrange,_);
 			.my_name(Me);
 			mapping.initMap(Width, Height, Scanrange, Me);
-
+			
+			// make a random move with range N
+			?randomwalk_max(N);
+			movement.random_walk(N, X, Y, C);
+			
+			// log before taking move (for obstructed belief) 
+		   	mapping.efficientRoute(X, Y, Xeff, Yeff);
+		   	rover.ia.log_movement(Xeff, Yeff);
+		   	move(Xeff, Yeff);
+			
 			// now can start scanning and moving
 			!scan_move;.
 			
@@ -62,11 +71,12 @@ resourceType("None"). //start with belief that can carry any resource
 			?randomwalk_max(N);
 			//movement.random_walk(N, X, Y, C);
 
-			// go to the best scan location
-			//?randomwalk_max(N); // for when all map is scanned
-			movement.newScanLoc(Xrem, Yrem, Scanrange, N, X, Y, FullyScanned);
+			// go to the best scan location (will return collect resources coords under some conditions)
+			?carrying(Num);
+			?resourceType(Type);
+			movement.newScanLoc(Xrem, Yrem, Scanrange, Type, Num, N, X, Y, FullyScanned);
 			
-		   	// don't log until it is completed (see action_completed)
+		   	// log before taking move (for obstructed belief) 
 		   	mapping.efficientRoute(X, Y, Xeff, Yeff);
 		   	rover.ia.log_movement(Xeff, Yeff);
 		   	move(Xeff, Yeff);
@@ -79,6 +89,7 @@ resourceType("None"). //start with belief that can carry any resource
 
 /* collect_resource */
 // collect resource then return to base
+//@collect_resource[atomic]
 +! collect_resource(Type, Num, X, Y)[source(Ag)] : Ag == self
 		<-	.print("Collecting ", Type);
 		
@@ -99,6 +110,13 @@ resourceType("None"). //start with belief that can carry any resource
 					collect(Type);
 					-+carrying(Carrying + I);
 					.print("Carrying ", Carrying + I, " ", Type);
+					
+					// set tile to empty if collected all the resources on it
+					if (Carrying + I >= Num){
+						.print("All resources collected on this tile, setting to empty...")
+						rover.ia.get_distance_from_base(Xcurr, Ycurr);
+						mapping.setTileEmpty(Xcurr, Ycurr);
+					}
 				}
 			}
 			// must set rover resource type to collected type
@@ -113,7 +131,12 @@ resourceType("None"). //start with belief that can carry any resource
 			
 // plan failure
 -! collect_resource(Type, Num, X, Y) : true
-		<-	.print("!!!!!!!! collect_resource failed");.		
+		<-	.print("!!!!!!!! collect_resource failed");
+			//-resource_found(Type, Num, DX, DY);
+			
+			// make a random move to get out of the way of failure (range = +-2)
+			//movement.random_walk(2, X, Y, C);
+			.		
 
 
 /* shuttle_resource */
@@ -129,6 +152,13 @@ resourceType("None"). //start with belief that can carry any resource
 					collect(Type);
 					-+carrying(Carrying + I);
 					.print("Carrying ", Carrying + I, " ", Type);
+					
+					// set tile to empty if collected all the resources on it
+					if (Carrying + I >= Num){
+						.print("All resources collected on this tile, setting to empty...")
+						rover.ia.get_distance_from_base(Xcurr, Ycurr);
+						mapping.setTileEmpty(Xcurr, Ycurr);
+					}
 				}
 			}
 			// must set rover resource type to collected type
@@ -145,20 +175,24 @@ resourceType("None"). //start with belief that can carry any resource
 			?carrying(ToDeposit);
 			for ( .range(J, 1, ToDeposit) ) {
 				deposit(Type);
+				
+				// add to java singleton memory
+				memory.logDeposit(Type, DepotCount);
+				
 				-+carrying(ToDeposit - J);
-				.print("Carrying ", ToDeposit - J, " ", Type);
+				.print("Carrying ", Carrying - I, " ", Type, " || ", Type, " Deposit Count: ", DepotCount);
 			}
 			
 			// now move back to where initial scan was
 			Remaining = Num - ToDeposit;
-			.print("--------------> ", Remaining);
+			.print("--------------> Shuttle Remaining: ", Remaining);
 			if (Remaining > 0 ){
 				.print("---> Collecting the rest of the resources");
 				rover.ia.log_movement(-DXeff, -DYeff);
 				move(-DXeff, -DYeff);
 				
 				// run shuttle plan
-				!shuttle_resource(Type, Remaining+1);
+				!shuttle_resource(Type, Remaining);
 			}
 			else {
 				?whereScanWas(X, Y);
@@ -193,8 +227,12 @@ resourceType("None"). //start with belief that can carry any resource
 			// Deposit xNum of type 'Type'
 			for ( .range(I, 1, Carrying) ) {
 				deposit(Type);
+								
+				// add to java singleton memory
+				memory.logDeposit(Type, DepotCount);
+				
 				-+carrying(Carrying - I);
-				.print("Carrying ", Carrying - I, " ", Type);
+				.print("Carrying ", Carrying - I, " ", Type, " || ", Type, " Deposit Count: ", DepotCount);
 			}
 			
 			// now move back to where initial scan was
@@ -216,7 +254,12 @@ resourceType("None"). //start with belief that can carry any resource
 
 // plan failure	
 -! deposit_resource(Type, Num) : true
-		<-	.print("!!!!!!!! deposit_resource failed");.
+		<-	.print("!!!!!!!! deposit_resource failed");
+			//-resource_found(Type, Num, DX, DY);
+			
+			// make a random move to get out of the way of failure (range = +-2)
+			//movement.random_walk(2, X, Y, C);
+			.
 
 
 /* ------------- Triggered Beliefs ------------- */
@@ -277,15 +320,16 @@ resourceType("None"). //start with belief that can carry any resource
 
 
 
-/* NOTES BELOW
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
+/* NOTES BELOW:
+ * 1) deal with obstructions stopping agents mapping their chosen routes
+ * 2) when map is completely scanned, agents should go back to base and deposit resources
+ * 3) When move randomly is passed, newScanLoc should check map and send agent to a location
+ *  	with resources in it rather than pass random movement.
+ * 4) Agents failing on their collection plan is messing up the mapping, they lose their location.
+ * 		I think we need to move collect_resource out of the atomic resource_found. perhaps
+ * 		can .drop_all_desires and then trigger the obstructed? Check with deleting the belief!
+ * 5) Keep track of number of resources stored (DONE)
+ * 6) Think about the scan to distance travelled weighting.. is it better to cover more ground?
  * 
  * 
  * 

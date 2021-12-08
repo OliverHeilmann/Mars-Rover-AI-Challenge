@@ -16,8 +16,8 @@ public class mapSingleton {
    }
    
    // Private Constructor. Create a key for referencing to
-   Map<String, Integer> resourceDict_s2i;
-   Map<Integer, String> resourceDict_i2s;
+   private Map<String, Integer> resourceDict_s2i;
+   private Map<Integer, String> resourceDict_i2s;
    private mapSingleton() {
 	   // Create a hashmap to get the numerical equivalent to append in matrix
 	   // FOR STRING TO INTEGER QUIERIES
@@ -44,6 +44,27 @@ public class mapSingleton {
 	   resourceDict_i2s.put(6, "Me");
 	   resourceDict_i2s.put(7, "Ally");
 	   resourceDict_i2s.put(8, "Enemy");
+   }
+   
+   
+   // create a dictionary for adding resource count to
+   private Map<String, Integer> resource_log = new HashMap<String, Integer>();
+   public int resourceDepositLog(String Type) {
+	   
+	   // get count of key type passed
+	   Integer count = resource_log.get(Type);
+	   
+       // add to dict if not already in
+       if (count == null) {
+    	   resource_log.put(Type, 1);
+       }
+       // else increment the found value by 1
+       else {
+    	   resource_log.put(Type, count + 1);
+       }
+	   
+       // now return the updated value by getting value from log again (to avoid null error)
+	   return resource_log.get(Type);
    }
    
    
@@ -218,6 +239,15 @@ public class mapSingleton {
 	   return;
    }
    
+   // if resources have been fully collected, set tile to empty
+   public void setTileEmpty(Integer[] myD_base) {
+	   int tile_to_baseX = matrixAdjust(myD_base[0]);
+	   int tile_to_baseY = matrixAdjust(myD_base[1]);
+
+	   // set tile to empty
+	   wholeMap[tile_to_baseY][tile_to_baseX] = resourceDict_s2i.get("Empty");
+   }
+   
    
    // Print the current map belief in console if requested
    public void showMap() {
@@ -334,6 +364,62 @@ public class mapSingleton {
 	   // return results to internal action function (newScanLoc())
 	   return theScanLocation;
    }
+   
+   
+   // Do I have any resources to collect on the map? If yes, go to them instead of random scan...
+   public int[][] myOnMapResources(String type, Integer[] myD_base){
+	   // make a 2D array with length of map width*height
+	   int[][] myResourceList = new int[wholeMap.length * wholeMap.length][2];
+	   int stepList = 0;
+	   
+	   String matVal;
+	   
+	   // loop through whole map and look for agent's resources
+	   for (int i = 0; i < wholeMap.length; i++) {
+           for (int j = 0; j < wholeMap[i].length; j++) {
+        	   // if I can carry anything, look for diamond and gold
+        	   if (type == "None") {
+        		   // if it is gold OR diamond
+        		   if (wholeMap[i][j] == resourceDict_s2i.get("Gold") || wholeMap[i][j] == resourceDict_s2i.get("Diamond")) {
+            		   // add the corrected map cell location
+            		   myResourceList[stepList][0] = mapAdjust(j - matrixAdjust(myD_base[0]));
+            		   myResourceList[stepList][1] = mapAdjust(i - matrixAdjust(myD_base[1]));
+            		   
+            		   /*
+            		   matVal = "(" + Integer.toString(myD_base[0]) + ", " + 
+            				   		Integer.toString(myD_base[1]) + ") || ";
+            		   
+            		   matVal = matVal + Integer.toString(myResourceList[stepList][0]) + ", " +
+            				   			Integer.toString(myResourceList[stepList][1]);
+            		   System.out.println(matVal);
+            		   */
+            		   
+            		   stepList += 1;
+        		   }
+        	   }
+        	   // else if cell has agent resource type, store it
+        	   else if (wholeMap[i][j] == resourceDict_s2i.get(type)) {
+        		   
+        		   // add the corrected map cell location
+        		   myResourceList[stepList][0] = mapAdjust(j - matrixAdjust(myD_base[0]));
+        		   myResourceList[stepList][1] = mapAdjust(i - matrixAdjust(myD_base[1]));
+        		   
+        		   /*
+        		   matVal = "(" + Integer.toString(myD_base[0]) + ", " + 
+   				   		Integer.toString(myD_base[1]) + ") || ";
+   		   
+		   		   matVal = matVal + Integer.toString(myResourceList[stepList][0]) + ", " +
+		   				   			Integer.toString(myResourceList[stepList][1]);
+		   		   System.out.println(matVal);
+		   		   */
+        		   
+		   		   stepList += 1;
+        	   }
+           }    
+       }
+
+	   return myResourceList;
+   }
 }
 
 
@@ -343,7 +429,7 @@ public class mapSingleton {
 
 
 /*	NOTES:
- * 
+ *  1) Set tile to empty when resources have been all collected [DONE]
  * 
  * 
  * 
