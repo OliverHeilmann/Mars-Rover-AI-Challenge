@@ -420,6 +420,7 @@ public class mapSingleton {
    // ------------------ A* SEARCHING ALGORITHM SECTION BELOEW ----------------------//
    // -------------------------------------------------------------------------------//
    // Taken From: https://gamedev.stackexchange.com/questions/197165/java-simple-2d-grid-pathfinding
+   // modified for world wrapping
    
    // update obstacle map with new obstacles before plotting route to end point
    private void updateObstacleMap() {
@@ -433,27 +434,6 @@ public class mapSingleton {
         	   }
            }    
        }
-   }
-   
-   // Print the current map belief in console if requested
-   public void showObstacleMap() {
-	   
-	   // update before showing
-	   updateObstacleMap();
-	   
-	   String matVal;
-	   
-	   // Make all values of wholeMap = 0
-	   for (int i = 0; i < obstacleMap.length; i++) {
-           for (int j = 0; j < obstacleMap[i].length; j++) {
-        	   
-        	   matVal = Integer.toString(obstacleMap[i][j]) + ", ";
-        	   
-        	   System.out.print(matVal);
-           }    
-           System.out.println("");
-       }
-	   System.out.println("");
    }
    
    
@@ -472,21 +452,39 @@ public class mapSingleton {
 	   @Override
 	   public String toString() { return String.format("(%d, %d)", x, y); }
 	
-	       @Override
-	       public boolean equals(Object o) {
-	           Point point = (Point) o;
-	           return x == point.x && y == point.y;
-	       }
-	
-	       @Override
-	       public int hashCode() { return Objects.hash(x, y); }
-	
-	       public Point offset(int ox, int oy) { return new Point(x + ox, y + oy, this);  }
+       @Override
+       public boolean equals(Object o) {
+           Point point = (Point) o;
+           return x == point.x && y == point.y;
+       }
+
+       @Override
+       public int hashCode() { return Objects.hash(x, y); }
+
+       public Point offset(int ox, int oy) { return new Point(x + ox, y + oy, this);  }
    }
 	
    
    // check if tile can be walked on (this is the map wrapping == off)
-   private static boolean IsWalkable(int[][] map, Point point) {
+   private boolean IsWalkable(int[][] map, Point point) { 
+
+	   // Adjust for map wrapping by making x and y positive if past map end
+	   // for point.x
+	   if (point.x > (mapWidth-1) ) {
+		   point.x = point.x - mapWidth;
+	   }
+	   else if (point.x < 0) {
+		   point.x = point.x + mapWidth;
+	   }
+	   // for point.y
+	   if (point.y > (mapWidth-1) ) {
+		   point.y = point.y - mapWidth;
+	   }
+	   else if (point.y < 0) {
+		   point.y = point.y + mapWidth;
+	   }
+
+	   // original map border conditions (likely the first two lines will never fire)
        if (point.y < 0 || point.y > map.length - 1) return false;
        if (point.x < 0 || point.x > map[0].length - 1) return false;
        return map[point.y][point.x] == 0;
@@ -494,7 +492,7 @@ public class mapSingleton {
 
    
    // look at neighbouring coordinates
-   private static List<Point> FindNeighbors(int[][] map, Point point) {
+   private List<Point> FindNeighbors(int[][] map, Point point) {
        List<Point> neighbors = new ArrayList<>();
        Point up = point.offset(0,  1);
        Point down = point.offset(0,  -1);
@@ -509,7 +507,7 @@ public class mapSingleton {
 
    
    // search for path (loop)
-   public static List<Point> FindPath(int[][] map, Point start, Point end) {
+   private List<Point> FindPath(int[][] map, Point start, Point end) {
        boolean finished = false;
        List<Point> used = new ArrayList<>();
        used.add(start);
@@ -517,8 +515,11 @@ public class mapSingleton {
            List<Point> newOpen = new ArrayList<>();
            for(int i = 0; i < used.size(); ++i){
                Point point = used.get(i);
+               
+               //System.out.println("-----------------");
                for (Point neighbor : FindNeighbors(map, point)) {
-                   if (!used.contains(neighbor) && !newOpen.contains(neighbor)) {
+            	   // if the successful point is not already in lists then add
+            	   if (!used.contains(neighbor) && !newOpen.contains(neighbor)) {
                        newOpen.add(neighbor);
                    }
                }
@@ -544,30 +545,107 @@ public class mapSingleton {
        }
        return path;
    }
+   
+   
+   // Print the current map belief in console if requested
+   public void showObstacleMap() {
+	   String matVal;
+	   
+	   // Make all values of wholeMap = 0
+	   for (int i = 0; i < obstacleMap.length; i++) {
+           for (int j = 0; j < obstacleMap[i].length; j++) {
+        	   
+        	   matVal = Integer.toString(obstacleMap[i][j]) + ", ";
+        	   
+        	   System.out.print(matVal);
+           }    
+           System.out.println("");
+       }
+	   System.out.println("");
+   }
 
    
    // main function to run a route through the maze
-   public void main(int[] startPoint, int[] endPoint) {
-	   int[][] map = {
-					{0, 0, 0, 0, 0},
-					{0, 5, 1, 0, 1},
-					{1, 0, 0, 1, 1},
-					{0, 0, 0, 1, 0},
-					{1, 1, 0, 0, 1}
-					};
-
-        Point start = new Point(0, 0, null);
-        Point end = new Point(3, 4, null);
+   public ArrayList<int[]> calcAStarRoute(int[] startPoint, int[] endPoint) {
+	   
+	   	// update the obstacle map before plotting a route (obstacleMap)
+	   	updateObstacleMap();
+	   	
+	   	// print for debugging
+	   	showObstacleMap();
+	   
+	   	// now we need to take distance to base and turn it into matrix equivalents
+	   	int startX = matrixAdjust(startPoint[0]);
+	   	int startY = matrixAdjust(startPoint[1]);
+	   	int endX = matrixAdjust(endPoint[0]);
+	   	int endY = matrixAdjust(endPoint[1]);
+	   	
+	   	// check if chosen tile to move to has an obstacle on it, if yes, pretend it 
+	   	// does not. Ok to not reach it on movement and throw +obstacle belief.
+	   	// replace tile with initial information at end of this function
+	   	int tileState = obstacleMap[endX][endY];
+	   	obstacleMap[endX][endY] = 0;
+	   	
+	   	/*
+	   	// print out start and end points for debugging
+	   	String P = "---> " + Integer.toString(startX) + "," + Integer.toString(startY) + 
+	   				" || " + Integer.toString(endX) + "," + Integer.toString(endY);
+	   	System.out.print(P);
+	   	System.out.println("");
+	   	*/
+	   	
+	   	// reformat coordinates to points for A* algorithm
+        Point start = new Point(startX, startY, null);
+        Point end = new Point(endX, endY, null);
         
-        List<Point> path = FindPath(map, start, end);
+        // make array and arraylist for returning to aStarRoute internal action
+        int[] passCoords = new int[2];
+        ArrayList<int[]> coordsList = new ArrayList<int[]>();
+        
+        // store previous steps
+        int prevX = 0;
+        int prevY = 0;
+        
+        // now find path and print it to console
+        List<Point> path = FindPath(obstacleMap, start, end);
         if (path != null) {
             for (Point point : path) {
-                System.out.println(point);
+            	
+            	// need to change map coordinates for corresponding dx, dy movement actions
+         	   	// get optimised route distance TO TILE (from agent)
+         	   	int me_to_tileX = matrixAdjust(matrixAdjust(point.x) - startPoint[0]);
+         	   	me_to_tileX = mapAdjust(me_to_tileX);
+			   
+         	   	int me_to_tileY = matrixAdjust(matrixAdjust(point.y) - startPoint[1]);
+         	   	me_to_tileY = mapAdjust(me_to_tileY);
+         	   	
+         	   	// now add the command to the array DX, then update previous step to current
+         	   	passCoords[0] = me_to_tileX - prevX;
+         	   	prevX = me_to_tileX;
+         	   	
+         	   	// now add the command to the array DY, then update previous step to current
+         	   	passCoords[1] = me_to_tileY - prevY;
+         	   	prevY = me_to_tileY;
+            	
+         	   	/*
+        	   	// print out start and end points for debugging
+        	   	String P2 = Integer.toString(point.x) + "," + Integer.toString(point.y) + 
+        	   				" || " + Integer.toString(passCoords[0]) + "," + Integer.toString(passCoords[1]);
+        	   	System.out.print(P2);
+        	   	System.out.println("");
+        	   	*/
+
+        	   	// now finally the coordinates to the arraylist
+        	   	coordsList.add(passCoords);
             }
         }
-        else {
-            System.out.println("No path found");
-        }
+        else {System.out.println("-------------------------> No path found");}
+        
+        // reset tileState to its initial state
+        obstacleMap[endX][endY] = tileState;
+        
+        // return the array of coordinates the agent should travel via
+        return coordsList;
     }
 }
 

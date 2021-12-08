@@ -81,9 +81,6 @@ resourceType("None"). //start with belief that can carry any resource
 +! scan_move[source(Ag)] : Ag == self
 		<-	.print("Agent making a move...");
 		
-			// testing A* search
-			movement.aStarRoute;
-		
 			// remember where the scan was made
 			rover.ia.get_distance_from_base(Xrem, Yrem);
 			-+whereScanWas(Xrem, Yrem);
@@ -109,6 +106,9 @@ resourceType("None"). //start with belief that can carry any resource
 			?carrying(Num);
 			?resourceType(Type);
 			movement.newScanLoc(Xrem, Yrem, Scanrange, Type, Num, N, X, Y);
+			
+			// testing A* search
+			movement.aStarRoute(Xrem, Yrem, X, Y);
 			
 			// if dir = -999 then this means agent should RTB and deposit resources	   	
 		   	if (X == -999 & Y == -999){
