@@ -25,7 +25,7 @@ public class newScanLoc extends DefaultInternalAction {
     	
     	//Get resource type in Java format (may be "None")
         String resourceType = args[3].toString().replace("\"", "");
-    	
+
     	// resources currently carrying
     	int carryingResources = (int)((NumberTerm) args[4]).solve();
     	
@@ -68,30 +68,31 @@ public class newScanLoc extends DefaultInternalAction {
     			dirDX = allMyResourceList[i][0];
     			dirDY = allMyResourceList[i][1];
     		}
-    		
     		i += 1; // increment up list
     	}
-    	/*
-	   	String matVal = "(" + Integer.toString(dx) + ", " + 
-								Integer.toString(dy) + ") || ";
+    	
+    	// if there are no resources on the map, then get a new area to scan for
+    	if (dirDX == 0 && dirDY == 0) {
+    		// look for a new area to scan
+        	int[] scanLocCoords = object.scanNewArea(me_to_base, scan_range);
+        	
+        	// now check if the whole map has been scanned, if yes then either deposit
+        	// resources (if held) OR perform a random move.
+        	if (scanLocCoords[2] >= 1 && carryingResources > 0) {
+        		// resources to depot (this was passed as the input)
+        		dirDX = -999;
+        		dirDY = -999;
+        	}
+        	else {
+        		// set random scan area to DX, DY
+        		dirDX = ThreadLocalRandom.current().nextInt(-maxDelta, maxDelta);
+        		dirDY = ThreadLocalRandom.current().nextInt(-maxDelta, maxDelta);
+        	}
 
-		matVal = matVal + Integer.toString(dirDX) + ", " +
-		   					Integer.toString(dirDY);
-		System.out.println(matVal);
-		*/
-    	
-    	// look for a new area to scan
-    	int[] scanLocCoords = object.scanNewArea(me_to_base, scan_range);
-    	
-    	// if the whole map is scanned (==1), return random dx, dy within range maxDelta
-    	if (scanLocCoords[2] >= 1) {
-            scanLocCoords[0] = ThreadLocalRandom.current().nextInt(-maxDelta, maxDelta);
-            scanLocCoords[1] = ThreadLocalRandom.current().nextInt(-maxDelta, maxDelta);
     	}
 
-        // return random x and y
-        return un.unifies(new NumberTermImpl(scanLocCoords[0]), args[6]) && 
-        		un.unifies(new NumberTermImpl(scanLocCoords[1]), args[7]) && 
-        		un.unifies(new NumberTermImpl(scanLocCoords[2]), args[8]);
+        // return the best x and y given circumstances
+        return un.unifies(new NumberTermImpl(dirDX), args[6]) && 
+        		un.unifies(new NumberTermImpl(dirDY), args[7]);
     }
 }

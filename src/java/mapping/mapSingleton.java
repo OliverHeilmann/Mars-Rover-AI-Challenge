@@ -5,6 +5,10 @@ import java.util.Map;
 
 import mapping.mapSingleton;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 public class mapSingleton {
 
 	//create an object of SingleObject
@@ -14,6 +18,10 @@ public class mapSingleton {
    public static mapSingleton getInstance() {
       return instance;
    }
+
+   // -------------------------------------------------------------------------------//
+   // ----------------------- SCENE MAPPING SECTION BELOW ---------------------------//
+   // -------------------------------------------------------------------------------//
    
    // Private Constructor. Create a key for referencing to
    private Map<String, Integer> resourceDict_s2i;
@@ -72,9 +80,13 @@ public class mapSingleton {
    public int[][] wholeMap;
    private int mapWidth;
    private int mapHeight;
+   private int[][] obstacleMap; // for A* pathing
    public void init(int width, int height) {
 	   // Update wholeMap to be the size of the game
 	   wholeMap = new int[width][height];
+	   
+	   // make obstacle map for A*
+	   obstacleMap = new int[width][height];
 	   
 	   // Store map dimensions internally
 	   mapWidth = width;
@@ -84,13 +96,16 @@ public class mapSingleton {
 	   for (int i = 0; i < wholeMap.length; i++) {
 		   
            for (int j = 0; j < wholeMap[i].length; j++) {
-        	   
+        	   // for main belief map
         	   if (i == 0 & j == 0) {
         		   wholeMap[i][j] = resourceDict_s2i.get("Base");
         	   }
         	   else { 
         		   wholeMap[i][j] = 0;
         	   } 
+        	   
+        	   // for obstacle map
+        	   obstacleMap[i][j] = 0;
            }    
        }    
    }
@@ -371,28 +386,17 @@ public class mapSingleton {
 	   // make a 2D array with length of map width*height
 	   int[][] myResourceList = new int[wholeMap.length * wholeMap.length][2];
 	   int stepList = 0;
-	   
-	   String matVal;
-	   
+
 	   // loop through whole map and look for agent's resources
 	   for (int i = 0; i < wholeMap.length; i++) {
            for (int j = 0; j < wholeMap[i].length; j++) {
         	   // if I can carry anything, look for diamond and gold
-        	   if (type == "None") {
+        	   if (type.equals("None")) {
         		   // if it is gold OR diamond
         		   if (wholeMap[i][j] == resourceDict_s2i.get("Gold") || wholeMap[i][j] == resourceDict_s2i.get("Diamond")) {
             		   // add the corrected map cell location
             		   myResourceList[stepList][0] = mapAdjust(j - matrixAdjust(myD_base[0]));
             		   myResourceList[stepList][1] = mapAdjust(i - matrixAdjust(myD_base[1]));
-            		   
-            		   /*
-            		   matVal = "(" + Integer.toString(myD_base[0]) + ", " + 
-            				   		Integer.toString(myD_base[1]) + ") || ";
-            		   
-            		   matVal = matVal + Integer.toString(myResourceList[stepList][0]) + ", " +
-            				   			Integer.toString(myResourceList[stepList][1]);
-            		   System.out.println(matVal);
-            		   */
             		   
             		   stepList += 1;
         		   }
@@ -404,15 +408,6 @@ public class mapSingleton {
         		   myResourceList[stepList][0] = mapAdjust(j - matrixAdjust(myD_base[0]));
         		   myResourceList[stepList][1] = mapAdjust(i - matrixAdjust(myD_base[1]));
         		   
-        		   /*
-        		   matVal = "(" + Integer.toString(myD_base[0]) + ", " + 
-   				   		Integer.toString(myD_base[1]) + ") || ";
-   		   
-		   		   matVal = matVal + Integer.toString(myResourceList[stepList][0]) + ", " +
-		   				   			Integer.toString(myResourceList[stepList][1]);
-		   		   System.out.println(matVal);
-		   		   */
-        		   
 		   		   stepList += 1;
         	   }
            }    
@@ -420,6 +415,160 @@ public class mapSingleton {
 
 	   return myResourceList;
    }
+   
+   // -------------------------------------------------------------------------------//
+   // ------------------ A* SEARCHING ALGORITHM SECTION BELOEW ----------------------//
+   // -------------------------------------------------------------------------------//
+   // Taken From: https://gamedev.stackexchange.com/questions/197165/java-simple-2d-grid-pathfinding
+   
+   // update obstacle map with new obstacles before plotting route to end point
+   private void updateObstacleMap() {
+	   // loop through wholeMap and add the obstacles to the obstacle map
+	   for (int i = 0; i < wholeMap.length; i++) {
+           for (int j = 0; j < wholeMap[i].length; j++) {
+        	   
+        	   // update if there is an obstacle there
+        	   if (wholeMap[i][j] == resourceDict_s2i.get(("Obstacle"))) {
+        		   obstacleMap[i][j] = 1; // A* version of obstacle
+        	   }
+           }    
+       }
+   }
+   
+   // Print the current map belief in console if requested
+   public void showObstacleMap() {
+	   
+	   // update before showing
+	   updateObstacleMap();
+	   
+	   String matVal;
+	   
+	   // Make all values of wholeMap = 0
+	   for (int i = 0; i < obstacleMap.length; i++) {
+           for (int j = 0; j < obstacleMap[i].length; j++) {
+        	   
+        	   matVal = Integer.toString(obstacleMap[i][j]) + ", ";
+        	   
+        	   System.out.print(matVal);
+           }    
+           System.out.println("");
+       }
+	   System.out.println("");
+   }
+   
+   
+   // observe the individual tiles
+   private static class Point {
+	   public int x;
+	   public int y;
+	   public Point previous;
+	
+	   public Point(int x, int y, Point previous) {
+	       this.x = x;
+	       this.y = y;
+	       this.previous = previous;
+	   }
+	
+	   @Override
+	   public String toString() { return String.format("(%d, %d)", x, y); }
+	
+	       @Override
+	       public boolean equals(Object o) {
+	           Point point = (Point) o;
+	           return x == point.x && y == point.y;
+	       }
+	
+	       @Override
+	       public int hashCode() { return Objects.hash(x, y); }
+	
+	       public Point offset(int ox, int oy) { return new Point(x + ox, y + oy, this);  }
+   }
+	
+   
+   // check if tile can be walked on (this is the map wrapping == off)
+   private static boolean IsWalkable(int[][] map, Point point) {
+       if (point.y < 0 || point.y > map.length - 1) return false;
+       if (point.x < 0 || point.x > map[0].length - 1) return false;
+       return map[point.y][point.x] == 0;
+   }
+
+   
+   // look at neighbouring coordinates
+   private static List<Point> FindNeighbors(int[][] map, Point point) {
+       List<Point> neighbors = new ArrayList<>();
+       Point up = point.offset(0,  1);
+       Point down = point.offset(0,  -1);
+       Point left = point.offset(-1, 0);
+       Point right = point.offset(1, 0);
+       if (IsWalkable(map, up)) neighbors.add(up);
+       if (IsWalkable(map, down)) neighbors.add(down);
+       if (IsWalkable(map, left)) neighbors.add(left);
+       if (IsWalkable(map, right)) neighbors.add(right);
+       return neighbors;
+   }
+
+   
+   // search for path (loop)
+   public static List<Point> FindPath(int[][] map, Point start, Point end) {
+       boolean finished = false;
+       List<Point> used = new ArrayList<>();
+       used.add(start);
+       while (!finished) {
+           List<Point> newOpen = new ArrayList<>();
+           for(int i = 0; i < used.size(); ++i){
+               Point point = used.get(i);
+               for (Point neighbor : FindNeighbors(map, point)) {
+                   if (!used.contains(neighbor) && !newOpen.contains(neighbor)) {
+                       newOpen.add(neighbor);
+                   }
+               }
+           }
+
+           for(Point point : newOpen) {
+               used.add(point);
+               if (end.equals(point)) {
+                   finished = true;
+                   break;
+               }
+           }
+
+           if (!finished && newOpen.isEmpty())
+               return null;
+       }
+
+       List<Point> path = new ArrayList<>();
+       Point point = used.get(used.size() - 1);
+       while(point.previous != null) {
+           path.add(0, point);
+           point = point.previous;
+       }
+       return path;
+   }
+
+   
+   // main function to run a route through the maze
+   public void main(int[] startPoint, int[] endPoint) {
+	   int[][] map = {
+					{0, 0, 0, 0, 0},
+					{0, 5, 1, 0, 1},
+					{1, 0, 0, 1, 1},
+					{0, 0, 0, 1, 0},
+					{1, 1, 0, 0, 1}
+					};
+
+        Point start = new Point(0, 0, null);
+        Point end = new Point(3, 4, null);
+        
+        List<Point> path = FindPath(map, start, end);
+        if (path != null) {
+            for (Point point : path) {
+                System.out.println(point);
+            }
+        }
+        else {
+            System.out.println("No path found");
+        }
+    }
 }
 
 

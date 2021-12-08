@@ -45,10 +45,44 @@ resourceType("None"). //start with belief that can carry any resource
 -! init : true	<-	.print("!!!!!!!! init failed");.
 
 
+/* deposit_remaining_resources */
+// if there is nothing else to do, go back to the base and deposit resources
++! deposit_remaining_resources[source(Ag)] : Ag == self
+		<- .print("Depositing remaining resources at base");
+		
+			// return to base, log and then clear memory (efficient route already passed)
+			rover.ia.get_distance_from_base(DX, DY);
+			mapping.efficientRoute(DX, DY, DXeff, DYeff);
+		   	rover.ia.log_movement(DXeff, DYeff);
+		   	move(DXeff, DYeff);
+			rover.ia.clear_movement_log;
+		
+			// Deposit xNum of type 'Type'
+			?carrying(ToDeposit);
+			for ( .range(J, 1, ToDeposit) ) {
+				deposit(Type);
+				
+				// add to java singleton memory
+				memory.logDeposit(Type, DepotCount);
+				
+				-+carrying(ToDeposit - J);
+				.print("Carrying ", Carrying - I, " ", Type, " || ", Type, " Deposit Count: ", DepotCount);
+			}
+			
+			// now joint back to main loop
+			!scan_move;.
+
+// plan failure
+-! deposit_remaining_resources : true	<-	.print("!!!!!!!! init failed");.
+
+
 /* scan_move */
 // perform scan then move plan
 +! scan_move[source(Ag)] : Ag == self
 		<-	.print("Agent making a move...");
+		
+			// testing A* search
+			movement.aStarRoute;
 		
 			// remember where the scan was made
 			rover.ia.get_distance_from_base(Xrem, Yrem);
@@ -74,14 +108,26 @@ resourceType("None"). //start with belief that can carry any resource
 			// go to the best scan location (will return collect resources coords under some conditions)
 			?carrying(Num);
 			?resourceType(Type);
-			movement.newScanLoc(Xrem, Yrem, Scanrange, Type, Num, N, X, Y, FullyScanned);
+			movement.newScanLoc(Xrem, Yrem, Scanrange, Type, Num, N, X, Y);
+			
+			// if dir = -999 then this means agent should RTB and deposit resources	   	
+		   	if (X == -999 & Y == -999){
+		   		.print("Nothing left to do, will RTB to deposit");
+		   		
+		   		// drop any remaining desires if there were some
+		   		.drop_all_desires;
+		   		
+		   		// we are depositing resources to base (new plan)
+		   		!deposit_remaining_resources;
+		   	}
 			
 		   	// log before taking move (for obstructed belief) 
 		   	mapping.efficientRoute(X, Y, Xeff, Yeff);
 		   	rover.ia.log_movement(Xeff, Yeff);
 		   	move(Xeff, Yeff);
 
-		   	!scan_move.
+			// loop back to start
+		   	!scan_move;.
 		   	
 // plan failure
 -! scan_move : true <-	.print("!!!!!!!! scan_move failed");.
