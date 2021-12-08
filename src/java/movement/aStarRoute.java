@@ -37,22 +37,30 @@ public class aStarRoute extends DefaultInternalAction {
     	// now calculate the best route to take from start to end points
     	List<List<Integer>> agentPath = object.calcAStarRoute(me_to_base, tile_to_base);
     	
-    	System.out.println("-------------------------");
-    	
-    	// print to make sure it has come through ok
+    	// create list of listterms to pass back to ASL code
+    	ListTermImpl aStarMoves = new ListTermImpl();
         for (List<Integer> cmd : agentPath) {
+        	// init inner listterm
+        	ListTermImpl innerList = new ListTermImpl();
 
-        	Integer  dx = cmd.get(0);
-        	Integer dy = cmd.get(1);
+        	// convert ints to terms
+        	NumberTermImpl dxNumTerm = new NumberTermImpl(cmd.get(0));
+        	NumberTermImpl dyNumTerm = new NumberTermImpl(cmd.get(1));
+
+        	// add to inner list
+        	innerList.add(dxNumTerm);
+        	innerList.add(dyNumTerm);
         	
-        	
-        	System.out.print(dx);
+        	/*
+        	System.out.print(dxNumTerm);
         	System.out.print(", ");
-            System.out.println(dy);
+            System.out.println(dyNumTerm);
+            */
             
+            // add to total list
+            aStarMoves.add(innerList);
         }
-    	
-    	
+        
         // everything ok, so returns true
         return true;
     }
