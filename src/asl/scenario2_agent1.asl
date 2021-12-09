@@ -34,7 +34,7 @@ resourceType("None"). //start with belief that can carry any resource
 			movement.random_walk(N, X, Y, C);
 			
 			// do the moves to intended location (with A*, not simple movement)
-		   	// startDX, startDY, endDX, endDY, randomThresh
+		   	// endDX, endDY, randomThresh
 			!aStarMovement(X, Y, N);
 			
 			/*
@@ -53,14 +53,15 @@ resourceType("None"). //start with belief that can carry any resource
 
 /* aStarMovement */
 // use the input starting and ending points to calculate the A* movement based on map information
-+! aStarMovement(Xend, Yend, N)[source(Ag)] : Ag == self
++! aStarMovement(Xmove, Ymove, N)[source(Ag)] : Ag == self
 		<-	.print("Moving with A* optimisation");
 			
 			// get starting coordinates
 			rover.ia.get_distance_from_base(Xstart, Ystart);
 		
 			// get A* route between current position and intended, unify with AstarList
-			movement.aStarRoute(Xstart, Ystart, Xend, Yend, N, AstarList);
+			// we do XYstart - XYmove to set the value to 'new distance to base'
+			movement.aStarRoute(Xstart, Ystart, Xstart-Xmove, Ystart-Ymove, N, AstarList);
 
 			// now loop through list and do the A* moves!
 			for ( .member(Move, AstarList) ){
@@ -86,13 +87,12 @@ resourceType("None"). //start with belief that can carry any resource
 			rover.ia.get_distance_from_base(DX, DY);
 			
 			// do the moves to intended location (with A*, not simple movement)
-		   	// startDX, startDY, endDX, endDY, randomThresh
-			!aStarMovement(DX, DY, N);
-			/*
+			//!aStarMovement(DX, DY, N); // endDX, endDY, randomThresh
+			///*
 			mapping.efficientRoute(DX, DY, DXeff, DYeff);
 		   	rover.ia.log_movement(DXeff, DYeff);
 		   	move(DXeff, DYeff);
-		   	*/
+		   	//*/
 			rover.ia.clear_movement_log;
 		
 			// Deposit xNum of type 'Type'
@@ -140,9 +140,8 @@ resourceType("None"). //start with belief that can carry any resource
 			?carrying(Num);
 			?randomwalk_max(N);
 			?resourceType(Type);
-			movement.newScanLoc(Xrem, Yrem, Scanrange, Type, Num, N, X, Y);
-			
-			.print("--> ASL || ",X, ", ", Y);
+			rover.ia.get_distance_from_base(Xrem2, Yrem2);
+			movement.newScanLoc(Xrem2, Yrem2, Scanrange, Type, Num, N, X, Y);
 			
 			// if dir = -999 then this means agent should RTB and deposit resources	   	
 		   	if (X == -999 & Y == -999){
@@ -156,13 +155,13 @@ resourceType("None"). //start with belief that can carry any resource
 		   	}
 		   	
 		   	// do the moves to intended location (with A* movement)
-			!aStarMovement(X, Y, N); // endDX, endDY, randomThresh
-			
+			!aStarMovement(X, Y, N); // moveX, moveY, randomThresh
+			/*
 			// log before taking move (for obstructed belief) 
-		   	//mapping.efficientRoute(X, Y, Xeff, Yeff);
-		   	//rover.ia.log_movement(Xeff, Yeff);
-		   	//move(Xeff, Yeff);
-
+		   	mapping.efficientRoute(X, Y, Xeff, Yeff);
+		   	rover.ia.log_movement(Xeff, Yeff);
+		   	move(Xeff, Yeff);
+			*/
 			// loop back to start
 		   	!scan_move;.
 		   	

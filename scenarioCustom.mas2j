@@ -6,7 +6,7 @@ MAS ia_submission {
 	environment:
 		
 		rover.RoverWorld("mas2j_file=scenarioCustom.mas2j", 
-						"scenario_file=scenarios/Custom/staticCustom.json",
+						"scenario_file=scenarios/Custom/topLeft.json",
 						"discovery_type=none")
 	
 	agents:

@@ -42,7 +42,7 @@ public class newScanLoc extends DefaultInternalAction {
     	// ------------------- DECIDE ON WHERE TO GO NEXT ------------------- //
     	int dirDX = 0;
     	int dirDY = 0;
-
+    	
     	// find all relative distances to my resource type
     	int[][] allMyResourceList = object.myOnMapResources(resourceType, me_to_base);
     	
@@ -74,7 +74,6 @@ public class newScanLoc extends DefaultInternalAction {
     	// if there are no resources on the map, then get a new area to scan for
     	if (dirDX == 0 && dirDY == 0) {
     		// look for a new area to scan
-    		System.out.println("scanned new area");
         	int[] scanLocCoords = object.scanNewArea(me_to_base, scan_range);
         	
         	// If scanLocCoords[2] is not 1 i.e. the map still has places to scan, then search it!

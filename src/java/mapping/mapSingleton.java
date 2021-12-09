@@ -360,10 +360,11 @@ public class mapSingleton {
         	   // remember, we are only interested in finding the best place to scan...
         	   // now we also store the distance the agent must travel to get there...
         	   // note, we +1 to distance_score to avoid / by 0 error
-        	   if ((thresh * scan_score / (distance_score+1.0)) > total_score) {
+        	   Double currScore = Math.pow(scan_score,2) / (distance_score+1.0);
+        	   if (currScore > total_score) {
         		   
         		   // calculate new total score
-        		   total_score = scan_score / (distance_score+1.0);
+        		   total_score = currScore;
         		   
         		   // update the movement coordinates to give the agent
         		   theScanLocation[0] = mapAdjust(j - matrixAdjust(myD_base[0]));
@@ -377,16 +378,7 @@ public class mapSingleton {
 	   if ( total_score <= 0) {
 		   theScanLocation[2] = 1;
 	   }
-	   
-	   System.out.print("---------->>>>>>> ");
-	   System.out.print(myD_base[0]);
-	   System.out.print(", ");
-	   System.out.print(myD_base[1]);
-	   System.out.print(" || ");
-	   System.out.print(theScanLocation[0]);
-	   System.out.print(", ");
-	   System.out.println(theScanLocation[1]);
-	   
+
 	   // return results to internal action function (newScanLoc())
 	   return theScanLocation;
    }
@@ -597,13 +589,13 @@ public class mapSingleton {
 	   	int tileState = obstacleMap[endX][endY];
 	   	obstacleMap[endX][endY] = 0;
 	   	
-	   	
+	   	/*
 	   	// print out start and end points for debugging
 	   	String P1 = "---> " + Integer.toString(startX) + "," + Integer.toString(startY) + 
 	   				" || " + Integer.toString(endX) + "," + Integer.toString(endY);
 	   	System.out.print(P1);
 	   	System.out.println("");
-	   	
+	   	*/
 	   	
 	   	// reformat coordinates to points for A* algorithm
         Point start = new Point(startX, startY, null);
@@ -629,11 +621,13 @@ public class mapSingleton {
          	   	int me_to_tileY = matrixAdjust(matrixAdjust(point.y) - startPoint[1]);
          	   	me_to_tileY = mapAdjust(me_to_tileY);
          	   	
+         	   	/*
         	   	// print out start and end points for debugging
         	   	String P = "-----> " + Integer.toString(mapAdjust(me_to_tileX - prevX)) + "," +
         	   							Integer.toString(mapAdjust(me_to_tileY - prevY));
         	   	System.out.print(P);
         	   	System.out.println("");
+         	   	*/
          	   	
          	   	// add dx, dy to coordinate list
          	   	coordList.add(Arrays.asList(mapAdjust(me_to_tileX - prevX),
