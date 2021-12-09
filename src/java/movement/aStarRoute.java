@@ -19,7 +19,7 @@ public class aStarRoute extends DefaultInternalAction {
         
     	//Get the only object available
     	mapSingleton object = mapSingleton.getInstance();
-    	
+
     	// get input args
         int start_dx = (int)((NumberTerm) args[0]).solve();
     	int start_dy = (int)((NumberTerm) args[1]).solve();

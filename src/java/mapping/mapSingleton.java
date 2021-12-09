@@ -363,12 +363,15 @@ public class mapSingleton {
         	   Double currScore = Math.pow(scan_score,2) / (distance_score+1.0);
         	   if (currScore > total_score) {
         		   
-        		   // calculate new total score
-        		   total_score = currScore;
-        		   
-        		   // update the movement coordinates to give the agent
-        		   theScanLocation[0] = mapAdjust(j - matrixAdjust(myD_base[0]));
-        		   theScanLocation[1] = mapAdjust(i - matrixAdjust(myD_base[1]));
+        		   // now check to see if the tile is an obstacle
+        		   if (wholeMap[j][i] != resourceDict_s2i.get("Obstacle")) {
+        			   // calculate new total score
+            		   total_score = currScore;
+            		   
+            		   // update the movement coordinates to give the agent
+            		   theScanLocation[0] = mapAdjust(j - matrixAdjust(myD_base[0]));
+            		   theScanLocation[1] = mapAdjust(i - matrixAdjust(myD_base[1]));
+        		   }
         	   }
            }
        }
@@ -501,10 +504,23 @@ public class mapSingleton {
        Point down = point.offset(0,  -1);
        Point left = point.offset(-1, 0);
        Point right = point.offset(1, 0);
+       
+       // now add diagonal
+       Point upleft = point.offset(-1,  1);
+       Point upright = point.offset(1,  1);
+       Point downleft = point.offset(-1, -1);
+       Point downright = point.offset(1, -1);
+       
        if (IsWalkable(map, up)) neighbors.add(up);
        if (IsWalkable(map, down)) neighbors.add(down);
        if (IsWalkable(map, left)) neighbors.add(left);
        if (IsWalkable(map, right)) neighbors.add(right);
+       
+       // now add diagonal
+       if (IsWalkable(map, upleft)) neighbors.add(upleft);
+       if (IsWalkable(map, upright)) neighbors.add(upright);
+       if (IsWalkable(map, downleft)) neighbors.add(downleft);
+       if (IsWalkable(map, downright)) neighbors.add(downright);
        return neighbors;
    }
 
@@ -659,7 +675,7 @@ public class mapSingleton {
 
 /*	NOTES:
  *  1) Set tile to empty when resources have been all collected [DONE]
- * 
+ * 	2) Update map next search to account for known obstacles
  * 
  * 
  * 

@@ -48,7 +48,7 @@ resourceType("None"). //start with belief that can carry any resource
 			!scan_move;.
 			
 // plan failure
--! init : true	<-	.print("!!!!!!!! init failed");.
+-! init : true	<- .print("!!!!!!!! init failed");.
 
 
 /* aStarMovement */
@@ -78,7 +78,7 @@ resourceType("None"). //start with belief that can carry any resource
 			};.
 
 // plan failure
--! aStarMovement : true	<-	.print("!!!!!!!! aStarMovement failed");.			
+-! aStarMovement : true	<- .print("!!!!!!!! aStarMovement failed");.			
 
 
 /* deposit_remaining_resources */
@@ -115,7 +115,7 @@ resourceType("None"). //start with belief that can carry any resource
 			!scan_move;.
 
 // plan failure
--! deposit_remaining_resources : true	<-	.print("!!!!!!!! deposit_remaining_resources failed");.
+-! deposit_remaining_resources : true <- .print("!!!!!!!! deposit_remaining_resources failed");.
 
 
 /* scan_move */
@@ -144,8 +144,9 @@ resourceType("None"). //start with belief that can carry any resource
 			?carrying(Num);
 			?randomwalk_max(N);
 			?resourceType(Type);
+			rover.ia.check_config(MaxCapacity,_,_);
 			rover.ia.get_distance_from_base(Xrem2, Yrem2);
-			movement.newScanLoc(Xrem2, Yrem2, Scanrange, Type, Num, N, X, Y);
+			movement.newScanLoc(Xrem2, Yrem2, Scanrange, Type, Num, MaxCapacity, N, X, Y);
 			
 			// if dir = -999 then this means agent should RTB and deposit resources	   	
 		   	if (X == -999 & Y == -999){
@@ -166,11 +167,12 @@ resourceType("None"). //start with belief that can carry any resource
 		   	rover.ia.log_movement(Xeff, Yeff);
 		   	move(Xeff, Yeff);
 			*/
+						
 			// loop back to start
 		   	!scan_move;.
 		   	
 // plan failure
--! scan_move : true <-	.print("!!!!!!!! scan_move failed");.
+-! scan_move : true <- .print("!!!!!!!! scan_move failed");.
 
 
 /* collect_resource */
@@ -220,13 +222,7 @@ resourceType("None"). //start with belief that can carry any resource
 			}.
 			
 // plan failure
--! collect_resource(Type, Num, X, Y) : true
-		<-	.print("!!!!!!!! collect_resource failed");
-			//-resource_found(Type, Num, DX, DY);
-			
-			// make a random move to get out of the way of failure (range = +-2)
-			//movement.random_walk(2, X, Y, C);
-			.		
+-! collect_resource(Type, Num, X, Y) : true <- .print("!!!!!!!! collect_resource failed");.		
 
 
 /* shuttle_resource */
@@ -303,8 +299,7 @@ resourceType("None"). //start with belief that can carry any resource
 			}.
 
 // plan failure
--! shuttle_resource(Type, Num, X, Y) : true
-		<- .print("!!!!!!!! shuttle_resource failed");.
+-! shuttle_resource(Type, Num, X, Y) : true <- .print("!!!!!!!! shuttle_resource failed");.
 		
 
 /* deposit_resource */
@@ -313,9 +308,12 @@ resourceType("None"). //start with belief that can carry any resource
 				
 			// do moves, log and then clear memory
 			rover.ia.get_distance_from_base(DX, DY);
+			!aStarMovement(DX, DY); // moveX, moveY
+			/*
 			mapping.efficientRoute(DX, DY, DXeff, DYeff);
 		   	rover.ia.log_movement(DXeff, DYeff);
 		   	move(DXeff, DYeff);
+		   	*/
 			rover.ia.clear_movement_log;
 			
 			// How many resources do I have?
@@ -338,28 +336,28 @@ resourceType("None"). //start with belief that can carry any resource
 			// now move back to where initial scan was
 			if (Remaining > 0 ){
 				.print("---> Collecting the rest of the resources");
+				!aStarMovement(-DXeff, -DYeff); // moveX, moveY
+				/*
 				rover.ia.log_movement(-DXeff, -DYeff);
 				move(-DXeff, -DYeff);
-				
+				*/
+
 				// run shuttle plan
 				!shuttle_resource(Type, Remaining);
 			}
 			else {
 				?whereScanWas(X, Y);
+				!aStarMovement(-X, -Y); // moveX, moveY
+				/*
 				mapping.efficientRoute(X, Y, Xeff, Yeff);
 				rover.ia.log_movement(-Xeff, -Yeff);
 				move(-Xeff, -Yeff);
+				*/
 				.print("---> Now back at scan position");
 			}.
 
 // plan failure	
--! deposit_resource(Type, Num) : true
-		<-	.print("!!!!!!!! deposit_resource failed");
-			//-resource_found(Type, Num, DX, DY);
-			
-			// make a random move to get out of the way of failure (range = +-2)
-			//movement.random_walk(2, X, Y, C);
-			.
+-! deposit_resource(Type, Num) : true <- .print("!!!!!!!! deposit_resource failed");.
 
 
 /* ------------- Triggered Beliefs ------------- */
@@ -380,13 +378,21 @@ resourceType("None"). //start with belief that can carry any resource
 			?whereScanWas(DXme, DYme);
 			mapping.updateMap(Type, DXme, DYme, DX, DY, Num);
 		
-			// is it a resource?
-			if (Type == "Gold" | Type == "Diamond"){
-				// can I carry the resource?
-				?resourceType(MyType);
-				if (MyType == "None" | MyType == Type){
-					// passed checks, collect the resource
-					!collect_resource(Type, Num, DX, DY);
+			// check if obstructed belief exists, if yes then do nothing else
+			.count(obstructed(_,_,_,_), ObstructCount);
+			if ( ObstructCount > 0  ){
+				.print("-------->>>>> OBSTRUCTION: Skipping resources");
+			}
+			else{
+				// is it a resource?
+				if (Type == "Gold" | Type == "Diamond"){
+					// can I carry the resource, do I have a capacity?
+					?resourceType(MyType);
+					rover.ia.check_config(MaxCapacity,_,_);
+					if ((MyType == "None" | MyType == Type) & MaxCapacity \== 0){
+						// passed checks, collect the resource
+						!collect_resource(Type, Num, DX, DY);
+					}
 				}
 			}.
 
@@ -403,7 +409,7 @@ resourceType("None"). //start with belief that can carry any resource
 + obstructed(X_travelled, Y_travelled, X_left, Y_left)[source(Ag)] : Ag == percept
 		<-	.print("Obstruction, updating logger");
 		
-			// get the planned movement
+			// get the remaining planned movement and subtract it from log
 			mapping.efficientRoute(-X_left, -Y_left, Xeff, Yeff);
 			rover.ia.log_movement(Xeff, Yeff);
 			
@@ -414,33 +420,34 @@ resourceType("None"). //start with belief that can carry any resource
 		   	
 		   	.drop_all_desires;
 		   	
-		   	!scan_move;
-		   	.
+		   	!scan_move;.
 
 
 
 
 /* NOTES BELOW:
  * 1) deal with obstructions stopping agents mapping their chosen routes
- * 2) when map is completely scanned, agents should go back to base and deposit resources
+ * 2) when map is completely scanned, agents should go back to base and deposit resources [DONE]
  * 3) When move randomly is passed, newScanLoc should check map and send agent to a location
- *  	with resources in it rather than pass random movement.
+ *  	with resources in it rather than pass random movement. [DONE]
  * 4) Agents failing on their collection plan is messing up the mapping, they lose their location.
  * 		I think we need to move collect_resource out of the atomic resource_found. perhaps
  * 		can .drop_all_desires and then trigger the obstructed? Check with deleting the belief!
- * 5) Keep track of number of resources stored (DONE)
- * 6) Think about the scan to distance travelled weighting.. is it better to cover more ground?
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
+ * 5) Keep track of number of resources stored [DONE]
+ * 6) Think about the scan to distance travelled weighting.. is it better to cover more ground? [DONE]
+ * 7) Divide map into sections for agents to explore separately? Perhaps this is not ideal as resource types
+ * 		can be spread across agent boundaries...
+ * 8) Agent gets stuck in maze. Apparently no path can be resolved
+ * 9) Decide on resource types budget for agents. They should take a "ticket" from the pool in ASL to ensure
+ * 		not all agents are x1 resource
+ * 10) Remember last coordinates sent to agent (for map search) --> don't send the same coordinates again
+ * 11) Sabotage plan
+ * 12) If low on energy, go back to base immediately
+ * 13) Ask Fahid about energy usage in the diagonal
+ * 14) Fixing drop_all_desires issue [DONE] 
+ * 			
+ *			.my_name(Me);
+ *			.kill_agent(Me)
  * 
  * 
  * 

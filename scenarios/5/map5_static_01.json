@@ -5904,7 +5904,7 @@
   "world": {
     "configurable_points": 6,
     "fullscreen": false,
-    "maze": true,
+    "maze": false,
     "size": 30,
     "wrap": true
   },
