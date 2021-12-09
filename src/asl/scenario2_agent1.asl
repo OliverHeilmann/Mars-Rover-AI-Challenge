@@ -35,7 +35,7 @@ resourceType("None"). //start with belief that can carry any resource
 			
 			// do the moves to intended location (with A*, not simple movement)
 		   	// endDX, endDY, randomThresh
-			!aStarMovement(X, Y, N);
+			!aStarMovement(X, Y);
 			
 			/*
 			// log before taking move (for obstructed belief) 
@@ -53,8 +53,11 @@ resourceType("None"). //start with belief that can carry any resource
 
 /* aStarMovement */
 // use the input starting and ending points to calculate the A* movement based on map information
-+! aStarMovement(Xmove, Ymove, N)[source(Ag)] : Ag == self
++! aStarMovement(Xmove, Ymove)[source(Ag)] : Ag == self
 		<-	.print("Moving with A* optimisation");
+		
+			// get random number for when A* not needed...
+			?randomwalk_max(N);
 			
 			// get starting coordinates
 			rover.ia.get_distance_from_base(Xstart, Ystart);
@@ -86,16 +89,17 @@ resourceType("None"). //start with belief that can carry any resource
 			// return to base, log and then clear memory (efficient route already passed)
 			rover.ia.get_distance_from_base(DX, DY);
 			
-			// do the moves to intended location (with A*, not simple movement)
-			//!aStarMovement(DX, DY, N); // endDX, endDY, randomThresh
-			///*
+		   	// do the moves to intended location (with A* movement)
+			!aStarMovement(DX, DY); // moveX, moveY
+			/*
 			mapping.efficientRoute(DX, DY, DXeff, DYeff);
 		   	rover.ia.log_movement(DXeff, DYeff);
 		   	move(DXeff, DYeff);
-		   	//*/
+		   	*/
 			rover.ia.clear_movement_log;
 		
-			// Deposit xNum of type 'Type'
+			// Deposit xNum of type 'Type' (have to get our type)
+			?resourceType(Type)
 			?carrying(ToDeposit);
 			for ( .range(J, 1, ToDeposit) ) {
 				deposit(Type);
@@ -104,14 +108,14 @@ resourceType("None"). //start with belief that can carry any resource
 				memory.logDeposit(Type, DepotCount);
 				
 				-+carrying(ToDeposit - J);
-				.print("Carrying ", Carrying - I, " ", Type, " || ", Type, " Deposit Count: ", DepotCount);
+				.print("Carrying ", ToDeposit - J, " ", Type, " || ", Type, " Deposit Count: ", DepotCount);
 			}
 			
 			// now joint back to main loop
 			!scan_move;.
 
 // plan failure
--! deposit_remaining_resources : true	<-	.print("!!!!!!!! init failed");.
+-! deposit_remaining_resources : true	<-	.print("!!!!!!!! deposit_remaining_resources failed");.
 
 
 /* scan_move */
@@ -128,7 +132,7 @@ resourceType("None"). //start with belief that can carry any resource
 			
 			// update map with scan area
 			mapping.updateScanArea(Scanrange, Xrem, Yrem);
-			
+
 			// now actaully scan
 		   	scan(Scanrange);
 		   	
@@ -155,7 +159,7 @@ resourceType("None"). //start with belief that can carry any resource
 		   	}
 		   	
 		   	// do the moves to intended location (with A* movement)
-			!aStarMovement(X, Y, N); // moveX, moveY, randomThresh
+			!aStarMovement(X, Y); // moveX, moveY
 			/*
 			// log before taking move (for obstructed belief) 
 		   	mapping.efficientRoute(X, Y, Xeff, Yeff);
@@ -178,11 +182,15 @@ resourceType("None"). //start with belief that can carry any resource
 			// move to location (if at resource and can carry more, move to it directly)
 			?whereScanWas(Xscan, Yscan);
 			rover.ia.get_distance_from_base(Xbase, Ybase);
-
+			
+			// do the moves to intended location (with A* movement)
+			!aStarMovement(Xbase + X -Xscan, Ybase + Y -Yscan); // moveX, moveY
+			/*
 			// efficient route optimisation (continue collecting if capacity > 0)
 			mapping.efficientRoute(Xbase + X -Xscan, Ybase + Y -Yscan, Xeff, Yeff);
 		   	rover.ia.log_movement(Xeff, Yeff);
 		   	move(Xeff, Yeff);
+		   	*/
 			
 			// Collect xNum of type 'Type'
 			rover.ia.check_config(MaxCapacity,_,_);
@@ -248,9 +256,14 @@ resourceType("None"). //start with belief that can carry any resource
 			
 			// return to base, log and then clear memory (efficient route already passed)
 			rover.ia.get_distance_from_base(DX, DY);
+			
+			// do the moves to intended location (with A* movement)
+			!aStarMovement(DX, DY); // moveX, moveY
+			/*
 			mapping.efficientRoute(DX, DY, DXeff, DYeff);
 		   	rover.ia.log_movement(DXeff, DYeff);
 		   	move(DXeff, DYeff);
+		   	*/
 			rover.ia.clear_movement_log;
 			
 			// Deposit xNum of type 'Type'
@@ -262,7 +275,7 @@ resourceType("None"). //start with belief that can carry any resource
 				memory.logDeposit(Type, DepotCount);
 				
 				-+carrying(ToDeposit - J);
-				.print("Carrying ", Carrying - I, " ", Type, " || ", Type, " Deposit Count: ", DepotCount);
+				.print("Carrying ", ToDeposit - J, " ", Type, " || ", Type, " Deposit Count: ", DepotCount);
 			}
 			
 			// now move back to where initial scan was
@@ -270,17 +283,22 @@ resourceType("None"). //start with belief that can carry any resource
 			.print("--------------> Shuttle Remaining: ", Remaining);
 			if (Remaining > 0 ){
 				.print("---> Collecting the rest of the resources");
+				!aStarMovement(-DXeff, -DYeff); // moveX, moveY
+				/*
 				rover.ia.log_movement(-DXeff, -DYeff);
 				move(-DXeff, -DYeff);
-				
+				*/
 				// run shuttle plan
 				!shuttle_resource(Type, Remaining);
 			}
 			else {
 				?whereScanWas(X, Y);
+				!aStarMovement(-DXeff, -DYeff); // moveX, moveY
+				/*
 				mapping.efficientRoute(X, Y, Xeff, Yeff);
 				rover.ia.log_movement(-Xeff, -Yeff);
 				move(-Xeff, -Yeff);
+				*/
 				.print("---> Now back at scan position");
 			}.
 
