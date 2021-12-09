@@ -33,10 +33,16 @@ resourceType("None"). //start with belief that can carry any resource
 			?randomwalk_max(N);
 			movement.random_walk(N, X, Y, C);
 			
+			// do the moves to intended location (with A*, not simple movement)
+		   	// startDX, startDY, endDX, endDY, randomThresh
+			!aStarMovement(X, Y, N);
+			
+			/*
 			// log before taking move (for obstructed belief) 
 		   	mapping.efficientRoute(X, Y, Xeff, Yeff);
 		   	rover.ia.log_movement(Xeff, Yeff);
 		   	move(Xeff, Yeff);
+			*/
 			
 			// now can start scanning and moving
 			!scan_move;.
@@ -47,11 +53,14 @@ resourceType("None"). //start with belief that can carry any resource
 
 /* aStarMovement */
 // use the input starting and ending points to calculate the A* movement based on map information
-+! aStarMovement(Xstart, Ystart, X, Y, N, AstarList)[source(Ag)] : Ag == self
++! aStarMovement(Xend, Yend, N)[source(Ag)] : Ag == self
 		<-	.print("Moving with A* optimisation");
+			
+			// get starting coordinates
+			rover.ia.get_distance_from_base(Xstart, Ystart);
 		
 			// get A* route between current position and intended, unify with AstarList
-			movement.aStarRoute(Xstart, Ystart, X, Y, N, AstarList);
+			movement.aStarRoute(Xstart, Ystart, Xend, Yend, N, AstarList);
 
 			// now loop through list and do the A* moves!
 			for ( .member(Move, AstarList) ){
@@ -75,9 +84,15 @@ resourceType("None"). //start with belief that can carry any resource
 		
 			// return to base, log and then clear memory (efficient route already passed)
 			rover.ia.get_distance_from_base(DX, DY);
+			
+			// do the moves to intended location (with A*, not simple movement)
+		   	// startDX, startDY, endDX, endDY, randomThresh
+			!aStarMovement(DX, DY, N);
+			/*
 			mapping.efficientRoute(DX, DY, DXeff, DYeff);
 		   	rover.ia.log_movement(DXeff, DYeff);
 		   	move(DXeff, DYeff);
+		   	*/
 			rover.ia.clear_movement_log;
 		
 			// Deposit xNum of type 'Type'
@@ -121,14 +136,13 @@ resourceType("None"). //start with belief that can carry any resource
 		   	.my_name(Me);
 		   	mapping.printMap(Me);
 		   	
-			// make a random move with range N
-			?randomwalk_max(N);
-			//movement.random_walk(N, X, Y, C);
-
 			// go to the best scan location (will return collect resources coords under some conditions)
 			?carrying(Num);
+			?randomwalk_max(N);
 			?resourceType(Type);
 			movement.newScanLoc(Xrem, Yrem, Scanrange, Type, Num, N, X, Y);
+			
+			.print("--> ASL || ",X, ", ", Y);
 			
 			// if dir = -999 then this means agent should RTB and deposit resources	   	
 		   	if (X == -999 & Y == -999){
@@ -141,8 +155,8 @@ resourceType("None"). //start with belief that can carry any resource
 		   		!deposit_remaining_resources;
 		   	}
 		   	
-		   	// do the moves to intended location (with A*, not simple movement)
-			!aStarMovement(Xrem, Yrem, X, Y, N, AstarList);
+		   	// do the moves to intended location (with A* movement)
+			!aStarMovement(X, Y, N); // endDX, endDY, randomThresh
 			
 			// log before taking move (for obstructed belief) 
 		   	//mapping.efficientRoute(X, Y, Xeff, Yeff);

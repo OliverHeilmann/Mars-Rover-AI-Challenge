@@ -74,21 +74,29 @@ public class newScanLoc extends DefaultInternalAction {
     	// if there are no resources on the map, then get a new area to scan for
     	if (dirDX == 0 && dirDY == 0) {
     		// look for a new area to scan
+    		System.out.println("scanned new area");
         	int[] scanLocCoords = object.scanNewArea(me_to_base, scan_range);
         	
-        	// now check if the whole map has been scanned, if yes then either deposit
-        	// resources (if held) OR perform a random move.
-        	if (scanLocCoords[2] >= 1 && carryingResources > 0) {
-        		// resources to depot (this was passed as the input)
-        		dirDX = -999;
-        		dirDY = -999;
+        	// If scanLocCoords[2] is not 1 i.e. the map still has places to scan, then search it!
+        	// If not, check if agent is carrying resources, if yes, deposit them. If not, pass 
+        	// a random move within threshold...
+        	if (scanLocCoords[2] < 1) {
+        		dirDX = scanLocCoords[0];
+        		dirDY = scanLocCoords[1];
+        		
         	}
         	else {
-        		// set random scan area to DX, DY
-        		dirDX = ThreadLocalRandom.current().nextInt(-maxDelta, maxDelta);
-        		dirDY = ThreadLocalRandom.current().nextInt(-maxDelta, maxDelta);
+        		if (carryingResources > 0){
+        			// resources to depot (this was passed as the input)
+            		dirDX = -999;
+            		dirDY = -999;
+        		}
+        		else {
+        			// set random scan area to DX, DY
+            		dirDX = ThreadLocalRandom.current().nextInt(-maxDelta, maxDelta);
+            		dirDY = ThreadLocalRandom.current().nextInt(-maxDelta, maxDelta);
+        		}
         	}
-
     	}
 
         // return the best x and y given circumstances

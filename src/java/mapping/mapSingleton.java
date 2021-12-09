@@ -17,7 +17,7 @@ public class mapSingleton {
    
    //Get the only object available
    public static mapSingleton getInstance() {
-      return instance;
+	   return instance;
    }
 
    // -------------------------------------------------------------------------------//
@@ -284,6 +284,7 @@ public class mapSingleton {
    
    
    // look at values from current map and select a location with maximum scan effectiveness
+   Double  thresh = 1.5; // make this bigger to put more emphasis on scan_score vs distance_score!!
    public int[] scanNewArea(Integer[] myD_base, int scanRange){
 	   // create placeholder for 1D array containing (dx, dy) from current agent position
 	   int[] theScanLocation = new int[3];
@@ -359,7 +360,7 @@ public class mapSingleton {
         	   // remember, we are only interested in finding the best place to scan...
         	   // now we also store the distance the agent must travel to get there...
         	   // note, we +1 to distance_score to avoid / by 0 error
-        	   if ((scan_score / (distance_score+1.0)) > total_score) {
+        	   if ((thresh * scan_score / (distance_score+1.0)) > total_score) {
         		   
         		   // calculate new total score
         		   total_score = scan_score / (distance_score+1.0);
@@ -376,6 +377,15 @@ public class mapSingleton {
 	   if ( total_score <= 0) {
 		   theScanLocation[2] = 1;
 	   }
+	   
+	   System.out.print("---------->>>>>>> ");
+	   System.out.print(myD_base[0]);
+	   System.out.print(", ");
+	   System.out.print(myD_base[1]);
+	   System.out.print(" || ");
+	   System.out.print(theScanLocation[0]);
+	   System.out.print(", ");
+	   System.out.println(theScanLocation[1]);
 	   
 	   // return results to internal action function (newScanLoc())
 	   return theScanLocation;
@@ -573,7 +583,7 @@ public class mapSingleton {
 	   	updateObstacleMap();
 	   	
 	   	// print for debugging
-	   	showObstacleMap();
+	   	//showObstacleMap();
 	   
 	   	// now we need to take distance to base and turn it into matrix equivalents
 	   	int startX = matrixAdjust(startPoint[0]);
@@ -589,9 +599,9 @@ public class mapSingleton {
 	   	
 	   	
 	   	// print out start and end points for debugging
-	   	String P = "---> " + Integer.toString(startX) + "," + Integer.toString(startY) + 
+	   	String P1 = "---> " + Integer.toString(startX) + "," + Integer.toString(startY) + 
 	   				" || " + Integer.toString(endX) + "," + Integer.toString(endY);
-	   	System.out.print(P);
+	   	System.out.print(P1);
 	   	System.out.println("");
 	   	
 	   	
@@ -618,6 +628,12 @@ public class mapSingleton {
 			   
          	   	int me_to_tileY = matrixAdjust(matrixAdjust(point.y) - startPoint[1]);
          	   	me_to_tileY = mapAdjust(me_to_tileY);
+         	   	
+        	   	// print out start and end points for debugging
+        	   	String P = "-----> " + Integer.toString(mapAdjust(me_to_tileX - prevX)) + "," +
+        	   							Integer.toString(mapAdjust(me_to_tileY - prevY));
+        	   	System.out.print(P);
+        	   	System.out.println("");
          	   	
          	   	// add dx, dy to coordinate list
          	   	coordList.add(Arrays.asList(mapAdjust(me_to_tileX - prevX),
