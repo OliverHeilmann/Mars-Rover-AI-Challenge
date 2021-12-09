@@ -78,7 +78,7 @@ public class mapSingleton {
    
    
    // Initialise the empty 2d array to append data to later
-   public int[][] wholeMap;
+   private int[][] wholeMap;
    private int mapWidth;
    private int mapHeight;
    private int[][] obstacleMap; // for A* pathing

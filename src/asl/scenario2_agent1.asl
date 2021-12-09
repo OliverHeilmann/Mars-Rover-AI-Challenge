@@ -185,6 +185,10 @@ resourceType("None"). //start with belief that can carry any resource
 			?whereScanWas(Xscan, Yscan);
 			rover.ia.get_distance_from_base(Xbase, Ybase);
 			
+			.print("---------->>>>>> To base: ", Xbase, ", ", Ybase);
+			.print("---------->>>>>> Was scan: ", Xscan, ", ", Yscan);
+			.print("---------->>>>>> Was scan: ", Xbase + X -Xscan, ", ",  Ybase + Y -Yscan);
+			
 			// do the moves to intended location (with A* movement)
 			!aStarMovement(Xbase + X -Xscan, Ybase + Y -Yscan); // moveX, moveY
 			/*
@@ -193,7 +197,7 @@ resourceType("None"). //start with belief that can carry any resource
 		   	rover.ia.log_movement(Xeff, Yeff);
 		   	move(Xeff, Yeff);
 		   	*/
-			
+
 			// Collect xNum of type 'Type'
 			rover.ia.check_config(MaxCapacity,_,_);
 			?carrying(Carrying);
@@ -222,7 +226,7 @@ resourceType("None"). //start with belief that can carry any resource
 			}.
 			
 // plan failure
--! collect_resource(Type, Num, X, Y) : true <- .print("!!!!!!!! collect_resource failed");.		
+//-! collect_resource(Type, Num, X, Y) : true <- .print("!!!!!!!! collect_resource failed");.		
 
 
 /* shuttle_resource */
@@ -390,8 +394,16 @@ resourceType("None"). //start with belief that can carry any resource
 					?resourceType(MyType);
 					rover.ia.check_config(MaxCapacity,_,_);
 					if ((MyType == "None" | MyType == Type) & MaxCapacity \== 0){
-						// passed checks, collect the resource
-						!collect_resource(Type, Num, DX, DY);
+						// 
+						?carrying(MyLoad);
+						if ( MyLoad >= MaxCapacity){
+							// should deposit resources instead of collect if full
+							!deposit_resource(Type, MyLoad);
+						}
+						else {
+							// passed checks, collect the resource
+							!collect_resource(Type, Num, DX, DY);
+						}
 					}
 				}
 			}.

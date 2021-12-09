@@ -70,6 +70,7 @@ public class aStarRoute extends DefaultInternalAction {
 	            aStarMoves.add(innerList);
 	        }
     	}
+    	/*
     	// else return 1 move of random values (to stop agents getting stuck)
     	else {
         	// init inner listterm
@@ -90,7 +91,7 @@ public class aStarRoute extends DefaultInternalAction {
             // add to total list
             aStarMoves.add(innerList);
     	}
-        
+        */
         // everything ok, so returns true
         return un.unifies(aStarMoves, args[5]);
     }
