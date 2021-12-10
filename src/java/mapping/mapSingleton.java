@@ -77,12 +77,30 @@ public class mapSingleton {
    }
    
    
+   // make a deepcopy of a 2D array used for clone
+   public static int[][] makeDeepCopy(int[][] source) {
+       int[][] destination = new int[source.length][];
+       for (int i = 0; i < source.length; ++i) {
+            destination[i] = new int[source[i].length];
+            System.arraycopy(source[i], 0, destination[i], 0, destination[i].length);
+       }
+       return destination;      
+   }
+   
+   
    // Initialise the empty 2d array to append data to later
    private int[][] wholeMap;
-   private int mapWidth;
+   public int mapWidth;
    private int mapHeight;
    private int[][] obstacleMap; // for A* pathing
-   public void init(int width, int height) {
+   private int[][] cloneMap;
+   private int numberOfAgents;
+   private int cloneIncr = 0;
+   public boolean triggerInit = false;
+   private int cloneThresh = 2; // change this to edit the refresh rate of the cloneMap (higher number == further from ground truth)
+   public void init(int width, int height, int countOfAgents) {
+	   triggerInit = true;
+	   
 	   // Update wholeMap to be the size of the game
 	   wholeMap = new int[width][height];
 	   
@@ -107,22 +125,30 @@ public class mapSingleton {
         	   
         	   // for obstacle map
         	   obstacleMap[i][j] = 0;
-           }    
-       }    
+           }
+       } 
+	   // make a clone map for adding information scan areas to (used for multiple agents search optimisation)
+	   cloneMap = makeDeepCopy(wholeMap);
+	   numberOfAgents = countOfAgents; // for dividing up the map into sections for searching
    }
 
    
    // Use scan range to populate scanned tiles, see if/ else gates to see exceptions
    private int[][][] myMat;
-   public void setNeighbourCoords(int scan_range, Integer [] coords) {
+   public void setNeighbourCoords(int scan_range, Integer [] coords, int mapType, Integer... args2) {
 	   // setup variables for appending to matrix
 	   int matSize = 2*scan_range+1;
 	   int centre = (int) Math.floor(matSize/2);
-	   myMat = new int[matSize][matSize][2];
+	   //myMat = new int[matSize][matSize][2];
 		
 	   // matrix specific vars
 	   int shift = 0;
 	   int r = scan_range+1;
+	   
+	   // allow user to choose which map to append scan coverage area to
+	   int[][][] chooseMap = new int[2][][];
+	   chooseMap[0] = wholeMap; 
+	   chooseMap[1] = cloneMap;
 	   
 	   // top half of matrix
 	   for (int i=0; i<=r; i++) {
@@ -132,8 +158,8 @@ public class mapSingleton {
 		   }
 		   for (int j=1; j<=2*i-1; j++) {
 			   // add this to myMat matrix, which can be printed with showNeighbourMatrix()
-			   myMat[i-1][j-1+shift][0] = coords[0] - (j-1+shift-centre);
-			   myMat[i-1][j-1+shift][1] = coords[1] - (i-1-centre);
+			   //myMat[i-1][j-1+shift][0] = coords[0] - (j-1+shift-centre);
+			   //myMat[i-1][j-1+shift][1] = coords[1] - (i-1-centre);
 			   
 			   // adjust for matrix dims
 			   int asset_to_baseX = matrixAdjust(coords[0] - (j-1+shift-centre));
@@ -141,11 +167,11 @@ public class mapSingleton {
 
 			   // if current tile is (0,0) i.e. the base, set it as the base
 			   if (asset_to_baseY == asset_to_baseX & asset_to_baseY == 0) {
-				   wholeMap[asset_to_baseY][asset_to_baseX] = resourceDict_s2i.get("Base");
+				   chooseMap[mapType][asset_to_baseY][asset_to_baseX] = resourceDict_s2i.get("Base");
 			   }
 			   // if current tile is NOT an obstacle, ok to set to empty (not base, not obstacle)
-			   else if (wholeMap[asset_to_baseY][asset_to_baseX] != resourceDict_s2i.get("Obstacle")) {
-				   wholeMap[asset_to_baseY][asset_to_baseX] = resourceDict_s2i.get("Empty");
+			   else if (chooseMap[mapType][asset_to_baseY][asset_to_baseX] != resourceDict_s2i.get("Obstacle")) {
+				   chooseMap[mapType][asset_to_baseY][asset_to_baseX] = resourceDict_s2i.get("Empty");
 			   }
 		   }
 	   }
@@ -158,8 +184,8 @@ public class mapSingleton {
 		   }
 		   for (int j=1; j<=2*i-1; j++) {
 			   // add this to myMat matrix, which can be printed with showNeighbourMatrix()
-			   myMat[matSize - i][j-1+shift][0] = coords[0] - (j-1+shift-centre);
-			   myMat[matSize - i][j-1+shift][1] = coords[1] + (i-1-centre);
+			   //myMat[matSize - i][j-1+shift][0] = coords[0] - (j-1+shift-centre);
+			   //myMat[matSize - i][j-1+shift][1] = coords[1] + (i-1-centre);
 			   
 			   // adjust for matrix dims
 			   int asset_to_baseX = matrixAdjust(coords[0] - (j-1+shift-centre));
@@ -167,11 +193,11 @@ public class mapSingleton {
 			   
 			   // if current tile is (0,0) i.e. the base, set it as the base
 			   if (asset_to_baseY == asset_to_baseX & asset_to_baseY == 0) {
-				   wholeMap[asset_to_baseY][asset_to_baseX] = resourceDict_s2i.get("Base");
+				   chooseMap[mapType][asset_to_baseY][asset_to_baseX] = resourceDict_s2i.get("Base");
 			   }
 			   // if current tile is NOT an obstacle, ok to set to empty (not base, not obstacle)
-			   else if (wholeMap[asset_to_baseY][asset_to_baseX] != resourceDict_s2i.get("Obstacle")) {
-				   wholeMap[asset_to_baseY][asset_to_baseX] = resourceDict_s2i.get("Empty");
+			   else if (chooseMap[mapType][asset_to_baseY][asset_to_baseX] != resourceDict_s2i.get("Obstacle")) {
+				   chooseMap[mapType][asset_to_baseY][asset_to_baseX] = resourceDict_s2i.get("Empty");
 			   }
 		   }
 	   }
@@ -266,14 +292,20 @@ public class mapSingleton {
    
    
    // Print the current map belief in console if requested
-   public void showMap() {
+   public void showMap(int mapType) {
+	   
+	   // allow user to choose which map to append scan coverage area to
+	   int[][][] chooseMap = new int[2][][];
+	   chooseMap[0] = wholeMap; 
+	   chooseMap[1] = cloneMap;
+	   
 	   String matVal;
 	   
 	   // Make all values of wholeMap = 0
-	   for (int i = 0; i < wholeMap.length; i++) {
-           for (int j = 0; j < wholeMap[i].length; j++) {
+	   for (int i = 0; i < chooseMap[mapType].length; i++) {
+           for (int j = 0; j < chooseMap[mapType][i].length; j++) {
         	   
-        	   matVal = Integer.toString(wholeMap[i][j]) + ", ";
+        	   matVal = Integer.toString(chooseMap[mapType][i][j]) + ", ";
         	   
         	   System.out.print(matVal);
            }    
@@ -284,9 +316,9 @@ public class mapSingleton {
    
    
    // look at values from current map and select a location with maximum scan effectiveness
-   public int[] scanNewArea(Integer[] myD_base, int scanRange){
+   public Integer[] scanNewArea(Integer[] myD_base, int scanRange){
 	   // create placeholder for 1D array containing (dx, dy) from current agent position
-	   int[] theScanLocation = new int[3];
+	   Integer[] theScanLocation = new Integer[3];
 	   theScanLocation[2] = 0; // set this to 1 when the whole map has been scanned
 	   
 	   Integer me_to_tileX, me_to_tileY;
@@ -298,10 +330,22 @@ public class mapSingleton {
 	   myMat = new int[matSize][matSize][2];
 	   int r = scanRange+1;
 	   int shift;
+	   
+	   // the cloneMap should give new results to the next agent asking so long as 
+	   // the incrementer is less than the number of agents. The intention here is to 
+	   // give out one new DIFFERENT scan location to each agent. If statement below
+	   // results the cloneMap to be in line with wholeMap if not. Otherwise, increment
+	   // up until threshold has been reached.
+	   if (cloneIncr >= numberOfAgents*cloneThresh) {
+		   cloneMap = makeDeepCopy(wholeMap);
+	   }
+	   else {
+		   cloneIncr += 1;
+	   }
 
 	   // loop through current map and find best distance score
-	   for (int i = 0; i < wholeMap.length; i++) {
-           for (int j = 0; j < wholeMap[i].length; j++) {
+	   for (int i = 0; i < cloneMap.length; i++) {
+           for (int j = 0; j < cloneMap[i].length; j++) {
         	   
         	   // get optimised route distance TO TILE (from agent)
         	   me_to_tileX = matrixAdjust(myD_base[0] - matrixAdjust(j));
@@ -330,7 +374,7 @@ public class mapSingleton {
         			   int tile_to_baseY = matrixAdjust(-i - (ii-1-centre));
         			   
         			   // if tile data is 0 (for unscanned), then this is a good place to scan, +1 point
-        			   if (wholeMap[tile_to_baseY][tile_to_baseX] == 0) {
+        			   if (cloneMap[tile_to_baseY][tile_to_baseX] == 0) {
         				   tileCount += 1; // +7.5 energy scan
         			   }
         		   }
@@ -349,13 +393,12 @@ public class mapSingleton {
         			   int tile_to_baseY = matrixAdjust(-i + (ii-1-centre)); // NOTICE THIS IS +VE!!!
         			   
         			   // if tile data is 0 (for unscanned), then this is a good place to scan, +1 point
-        			   if (wholeMap[tile_to_baseY][tile_to_baseX] == 0) {
+        			   if (cloneMap[tile_to_baseY][tile_to_baseX] == 0) {
         				   tileCount += 1; // +7.5 energy scan
         			   }
         			   
         		   }
         	   }
-        	   
         	   // now check if scan_score/distance_score is bigger than the previously stored total_score
         	   // remember, we are only interested in finding the best place to scan...
         	   // now we also store the distance the agent must travel to get there...
@@ -364,7 +407,11 @@ public class mapSingleton {
         	   Double energyPerTile = ((distanceEnergy + (7.5 * scanRange)) +1) / (tileCount+1.);
         	   if (energyPerTile < lowestEnergy) {
         		   
-        		   // now check to see if the tile is an obstacle
+        		   // now check to see if the tile is an obstacle. We check the actual map for
+        		   // information about whether there is an obstacle is there. As the cloneMap
+        		   // may be out of sync with the wholeMap, there may be missing obstacles. Hence,
+        		   // we check if the wholeMap has the obstacle even though we are using the cloneMap
+        		   // for determining the next best scan location
         		   if (wholeMap[j][i] != resourceDict_s2i.get("Obstacle")) {
         			   // calculate new total score
         			   lowestEnergy = energyPerTile;
@@ -383,12 +430,22 @@ public class mapSingleton {
 	   
 	   // final checks to see if the map has been completely scanned...
 	   // if yes, then set 0 to 1 to show ASL code that process is done
-	   if ( lowestEnergy <= 0) {
+	   if ( lowestEnergy >= (7.5 * scanRange)+1) {
 		   theScanLocation[2] = 1;
 	   }
 
 	   // return results to internal action function (newScanLoc())
 	   return theScanLocation;
+   }
+   
+   
+   // Agent has crashed into an object so reset the clone map to equal the whole map!
+   public void resetCloneMap() {
+	   // now clone map is up to date with data
+	   cloneMap = makeDeepCopy(wholeMap);
+	   
+	   // now start allocating clone info from 0
+	   cloneIncr = 0;
    }
    
    
@@ -660,7 +717,7 @@ public class mapSingleton {
             }
         }
         else {
-        	System.out.println("-------------------------> No path found");
+        	//System.out.println("-------------------------> No path found");
         	//coordList.add(Arrays.asList(-999,-999));
         }
         

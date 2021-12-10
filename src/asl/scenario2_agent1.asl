@@ -24,10 +24,14 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			// get map size
 			rover.ia.get_map_size(Width,Height);
 			
+			// count how many agents in game
+			.all_names(ListOfAgents);
+			.length(ListOfAgents, Count);
+			
 			// setup singleton empty map of scene
 			rover.ia.check_config(_,Scanrange,_);
 			.my_name(Me);
-			mapping.initMap(Width, Height, Scanrange, Me);
+			mapping.initMap(Width, Height, Scanrange, Me, Count);
 			
 			// make a random move with range N
 			?randomwalk_max(N);
@@ -75,18 +79,22 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 
 			rover.ia.check_status(Energy); // agent energy
 			?energyTrigger(State);
-			if ( (Steps * 6 >= Energy) & State == "OK" ){
+			if ( ((Steps * 6) >= Energy) & State == "OK" ){
 				.print("Agent almost out of energy, returning to base to deposit ASAP!")
 				
 				// drop all desires, you HAVE TO go back to base now!
 				.drop_all_desires;
 				
 				// deposit remaining resources
-				deposit_remaining_resources
+				!deposit_remaining_resources;
 				
 				// set RTB energy trigger to 1
 				NewState = "LOW";
 				-+energyTrigger(NewState);
+			}
+			elif (Energy < 10){
+				.my_name(Me);
+				.kill_agent(Me);
 			}
 			// agent still has energy, move as instructed!
 			else {
@@ -96,6 +104,8 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 					.nth(0,Move,XaStar);
 					.nth(1,Move,YaStar);
 					
+					-+nextTile(XaStar, YaStar);
+					
 					// log move, then actually move
 					rover.ia.log_movement(XaStar, YaStar);
 					move(XaStar, YaStar);
@@ -103,7 +113,7 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			};.
 
 // plan failure
--! aStarMovement : true	<- .print("!!!!!!!! aStarMovement failed");.			
+-! aStarMovement : true <- .print("!!!!!!!! aStarMovement failed");.			
 
 
 /* deposit_remaining_resources */
@@ -159,8 +169,13 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			mapping.updateScanArea(Scanrange, Xrem, Yrem);
 
 			// now actaully scan
-		   	scan(Scanrange);
-		   	
+			if (Scanrange > 0){
+				scan(Scanrange);
+			}
+			else{
+				//.wait(2000);
+			}
+
 		   	// print map now (only main agent prints map to console)
 		   	.my_name(Me);
 		   	mapping.printMap(Me);
@@ -415,7 +430,6 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 					?resourceType(MyType);
 					rover.ia.check_config(MaxCapacity,_,_);
 					if ((MyType == "None" | MyType == Type) & MaxCapacity \== 0){
-						// 
 						?carrying(MyLoad);
 						if ( MyLoad >= MaxCapacity){
 							// should deposit resources instead of collect if full
@@ -445,6 +459,15 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			// get the remaining planned movement and subtract it from log
 			mapping.efficientRoute(-X_left, -Y_left, Xeff, Yeff);
 			rover.ia.log_movement(Xeff, Yeff);
+		
+			// make the tile an obstacle so A* will go around it
+			Obs = "Obstacle";
+			?nextTile(XaStar, YaStar);
+			rover.ia.get_distance_from_base(Xstart, Ystart);
+			mapping.updateMap(Obs, Xstart, Ystart, XaStar, YaStar, 1);
+
+			// reset clone map to account for new obstacles
+			mapping.resetCloneMap(EmptyVar);
 			
 			// still want to get to same location, try move there again
 			// !!! this should be replaced with A* searcher to find new route !!!

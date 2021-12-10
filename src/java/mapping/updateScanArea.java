@@ -24,8 +24,8 @@ public class updateScanArea extends DefaultInternalAction {
     	me_to_base[0] = dx; 
     	me_to_base[1] = dy;
 
-		// create matrix of agent scan coverage area
-    	object.setNeighbourCoords(scan_range, me_to_base);
+		// update the wholeMap matrix of agent scan coverage area
+    	object.setNeighbourCoords(scan_range, me_to_base, 0); // 0 means append data to wholeMap (not cloneMap)
     	
         // everything ok, so returns true
         return true;

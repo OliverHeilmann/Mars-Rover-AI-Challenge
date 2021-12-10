@@ -18,11 +18,16 @@ public class initMap extends DefaultInternalAction {
     	int height = (int)((NumberTerm) args[1]).solve();
     	int scanRange = (int)((NumberTerm) args[2]).solve();
     	String agentName = args[3].toString();
+    	int countOfAgents = (int)((NumberTerm) args[4]).solve();
     	
     	// initialise matrix map size (first agent does it)
-        if (agentName.equals("agent_") || agentName.equals("agent_1")) {
+        if ( agentName.equals("scannerAgent_1") ) { //object.triggerInit == false) {
+        	
+        	System.out.print(agentName);
+        	System.out.println(" initialised the singleton class for the team!");
+        	
             // create matrix of game dims
-        	object.init(width, height);
+        	object.init(width, height, countOfAgents);
         }
 
         // everything ok, so returns true

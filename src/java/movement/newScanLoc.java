@@ -13,7 +13,9 @@ public class newScanLoc extends DefaultInternalAction {
 
     @Override
     public Object execute(TransitionSystem ts, Unifier un, Term[] args) throws Exception {
-    	// execute the internal action
+    	// make threshold higher to make agent more accepting of collecting resources
+    	// which are far away from it...
+    	double getResourceThresh = 2.0;// 0.15;
     	
     	//Get the only object available
     	mapSingleton object = mapSingleton.getInstance();
@@ -45,40 +47,47 @@ public class newScanLoc extends DefaultInternalAction {
     	int dirDY = 0;
     	
     	// if agent does not have a full cargo then it can look for a new tile to go to
-    	if (carryingResources < maxResources | maxResources == 0 ) {
-	    	// find all relative distances to my resource type
-	    	int[][] allMyResourceList = object.myOnMapResources(resourceType, me_to_base);
-	    	
-	    	// loop through all resource locations in list, if there are any, these should
-	    	// take priority over scanning new areas. Calculate the smallest vector distance
-	    	// i.e. closest resource
-	    	int i = 0; 
-	    	Double result = 0.;
-	    	Double vectorDist = Double.POSITIVE_INFINITY;
-	    	while(allMyResourceList[i][0] != 0 && allMyResourceList[i][1] != 0) {
-	    		
-	    		// get vector distance = sqrt(x^2 + y^2)
-	    		result = Math.pow(( Math.pow(allMyResourceList[i][0],2) + 
-	    							Math.pow(allMyResourceList[i][1],2) ), 0.5);
-	
-	    		// if result distance is smaller than vector distance, it is closer i.e. go there
-	    		if (result < vectorDist) {
-	    			
-	    			// set vectorDist to result
-	    			vectorDist = result;
-	    			
-	    			// now set the intended direction to the resource coordinates
-	    			dirDX = allMyResourceList[i][0];
-	    			dirDY = allMyResourceList[i][1];
-	    		}
-	    		i += 1; // increment up list
-	    	}
-	    	
+    	if (carryingResources < maxResources || maxResources == 0 ) {
+
+    		// if agent can carry resources, go to the location with resources
+    		if ( maxResources > 0 ) {
+
+		    	// find all relative distances to my resource type
+		    	int[][] allMyResourceList = object.myOnMapResources(resourceType, me_to_base);
+		    	
+		    	// loop through all resource locations in list, if there are any, these should
+		    	// take priority over scanning new areas. Calculate the smallest vector distance
+		    	// i.e. closest resource
+		    	int i = 0; 
+		    	Double result = 0.;
+		    	Double vectorDist = Double.POSITIVE_INFINITY;
+		    	while(allMyResourceList[i][0] != 0 && allMyResourceList[i][1] != 0) {
+		    		
+		    		// get vector distance = sqrt(x^2 + y^2)
+		    		result = Math.pow(( Math.pow(allMyResourceList[i][0],2) + 
+		    							Math.pow(allMyResourceList[i][1],2) ), 0.5);
+		
+		    		// if result distance is smaller than vector distance, it is closer i.e. go there
+		    		if (result < vectorDist ) {// & result < (object.mapWidth * getResourceThresh) ) {
+		    			
+		    			// set vectorDist to result
+		    			vectorDist = result;
+		    			
+		    			// now set the intended direction to the resource coordinates
+		    			dirDX = allMyResourceList[i][0];
+		    			dirDY = allMyResourceList[i][1];
+		    		}
+		    		i += 1; // increment up list
+		    	}
+    		}
 	    	// if there are no resources on the map, then get a new area to scan for
 	    	if (dirDX == 0 && dirDY == 0) {
-	    		// look for a new area to scan
-	        	int[] scanLocCoords = object.scanNewArea(me_to_base, scan_range);
-	        	
+	    		// look for a new area to scan in the cloneMap. Each agent will get a new location
+	    		// to scan but we must update the scanned area immediately afterwards so that the
+	    		// next agent does not go to the same "optimum" location as well.
+	        	Integer[] scanLocCoords = object.scanNewArea(me_to_base, scan_range);
+	        	object.setNeighbourCoords(scan_range, scanLocCoords, 1); // 1 means append data to cloneMap (not wholeMap)
+
 	        	// If scanLocCoords[2] is not 1 i.e. the map still has places to scan, then search it!
 	        	// If not, check if agent is carrying resources, if yes, deposit them. If not, pass 
 	        	// a random move within threshold...
@@ -94,6 +103,7 @@ public class newScanLoc extends DefaultInternalAction {
 	            		dirDY = -999;
 	        		}
 	        		else {
+	        			System.out.println("------------------------------------");
 	        			// set random scan area to DX, DY
 	            		dirDX = ThreadLocalRandom.current().nextInt(-maxDelta, maxDelta);
 	            		dirDY = ThreadLocalRandom.current().nextInt(-maxDelta, maxDelta);
@@ -103,11 +113,8 @@ public class newScanLoc extends DefaultInternalAction {
     	}
     	// else agent has full capacity with resources, it must go to base!
     	else {
-    		System.out.println("------------------------->>>> RTB!");
     		dirDX = dx;
         	dirDY = dy;
-        	System.out.format("%d, %d", dx, dy);
-        	System.out.println("");
     	}
 
         // return the best x and y given circumstances
