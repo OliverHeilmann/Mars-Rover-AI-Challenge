@@ -21,7 +21,7 @@ public class initMap extends DefaultInternalAction {
     	int countOfAgents = (int)((NumberTerm) args[4]).solve();
     	
     	// initialise matrix map size (first agent does it)
-        if ( agentName.equals("scannerAgent_1") ) { //object.triggerInit == false) {
+        if ( agentName.equals("collectorHEILMAO_") || agentName.equals("collectorHEILMAO_1") ) { //object.triggerInit == false) {
         	
         	System.out.print(agentName);
         	System.out.println(" initialised the singleton class for the team!");

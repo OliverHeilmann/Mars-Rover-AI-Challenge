@@ -86,8 +86,17 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 				NewState = "LOW";
 				-+energyTrigger(NewState);
 				
-				// deposit remaining resources
-				!deposit_remaining_resources;
+				.print(Scanrange);
+				rover.ia.check_config(_,Scanrange,_);
+				if (Scanrange >= 6){
+					.print("Out of energy... killing agent!")
+					.my_name(Me);
+					.kill_agent(Me);
+				}
+				else {
+					// deposit remaining resources
+					!deposit_remaining_resources;
+				}
 			}
 			elif (((Steps * 6 ) < Energy) & State == "LOW"){
 				.print("Out of energy... killing agent!")
@@ -459,13 +468,15 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			// get the remaining planned movement and subtract it from log
 			mapping.efficientRoute(-X_left, -Y_left, Xeff, Yeff);
 			rover.ia.log_movement(Xeff, Yeff);
-		
+			
+			/*
 			// make the tile an obstacle so A* will go around it
 			Obs = "Obstacle";
 			?nextTile(XaStar, YaStar);
 			rover.ia.get_distance_from_base(Xstart, Ystart);
 			mapping.updateMap(Obs, Xstart, Ystart, XaStar, YaStar, 1);
-
+			*/
+			
 			// reset clone map to account for new obstacles
 			mapping.resetCloneMap(EmptyVar);
 			
