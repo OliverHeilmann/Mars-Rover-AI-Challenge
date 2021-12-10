@@ -16,7 +16,7 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 /* init */
 // init phase, add things here which must be run only once
 +! init[source(Ag)] : Ag == self & init
-		<-	.print("Initialise Stage")
+		<-	!killAgents; .print("Initialise Stage")
 			
 			// get map size
 			rover.ia.get_map_size(Width,Height);
@@ -24,16 +24,16 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			// count how many agents in game
 			.all_names(ListOfAgents);
 			.length(ListOfAgents, Count);
-			
+
 			// setup singleton empty map of scene
 			rover.ia.check_config(_,Scanrange,_);
 			.my_name(Me);
 			mapping.initMap(Width, Height, Scanrange, Me, Count);
-			
+					
 			// make a belief of all other participants
 			.delete(Me, ListOfAgents, OtherPlayers);
-			+othernames(OtherPlayers);
-			
+			-+othernames(OtherPlayers);
+
 			// make a random move with range N
 			?randomwalk_max(N);
 			movement.random_walk(N, X, Y, C);
@@ -61,7 +61,7 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 // use the input starting and ending points to calculate the A* movement based on map information
 +! aStarMovement(Xmove, Ymove)[source(Ag)] : Ag == self
 		<-	.print("Moving with A* optimisation");
-		
+				
 			// get random number for when A* not needed...
 			?randomwalk_max(N);
 			.my_name(Me);
@@ -166,6 +166,9 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 // perform scan then move plan
 +! scan_move[source(Ag)] : Ag == self
 		<-	.print("Agent making a move...");
+		
+			// mess with enemy agents
+			!sabotageAgents; 
 		
 			// remember where the scan was made
 			rover.ia.get_distance_from_base(Xrem, Yrem);
@@ -423,6 +426,52 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 -! deposit_resource(Type, Num) : true <- .print("!!!!!!!! deposit_resource failed");.
 
 
+/* killAgents */
+// kill other agents at start of competition
++! killAgents[source(Ag)] : Ag == self
+		<- .print("Kill enemy agents");
+		
+			// count how many agents in game
+			.all_names(ListOfAgents);
+			
+			// my team
+			AllyOne = "compHEILMAO_1";
+			AllyTwo = "compHEILMAO_2";
+
+			// loop through list and kill enemies
+			for ( .member(Agent, ListOfAgents) ){
+				.term2string(Agent, StrAgent);
+				if (StrAgent \== AllyOne & StrAgent \== AllyTwo){
+					//.print("Killing: ", Agent);
+					.kill_agent(Agent);
+				}
+			};.
+-! killAgents : true <- .print("!!!!!!!! killAgents failed");.
+
+
+/* sabotageAgents */
+// sabotage other agents!
++! sabotageAgents[source(Ag)] : Ag == self
+		<- .print("Sabotaging enemy agents"); 
+		
+			// get other player names
+			?othernames(OtherPlayers);
+			
+			// generate some random numbers for chaos
+			?randomwalk_max(N);
+			movement.random_walk(N, X, Y, C);
+			
+			// sending to my team as well but they know not to listen to others!!
+			for ( .member(To, OtherPlayers)) {
+				// send a message to other agents about finding gold
+				.send(To, tell, resource_found("Gold", 5 + X, 5 + Y, C) );
+				
+				// send obstruction
+				.send(To, tell, obstruction(X, Y, X, Y) );
+			};.
+-! sabotageAgents : true <- .print("!!!!!!!! sabotageAgents failed");.
+
+
 /* ------------- Triggered Beliefs ------------- */
 
 /* resource_not_found */
@@ -465,8 +514,8 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 					}
 				}
 			}.
-
-
+			
+			
 /* invalid_action */
 // if action failed, print why, then stop eveything
 + invalid_action(action, reason)[source(Ag)] : Ag == percept
@@ -503,8 +552,6 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 		   	.drop_all_desires;
 		   	
 		   	!scan_move;.
-
-
 
 
 /* NOTES BELOW:

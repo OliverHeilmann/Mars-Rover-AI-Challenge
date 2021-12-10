@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public class mapSingleton {
 
@@ -81,6 +82,20 @@ public class mapSingleton {
 	   agentMapPosition.replace(myName, currPosRel);
    }
    
+   
+   // make a function to call for an internal action
+   public static Set<String> getEnemies( Set<String> allAgents){
+	   
+
+	   for (String key : agentMapPosition.keySet() ) {
+		   if ( !Arrays.asList(allAgents).contains(key) ) {
+		   
+		   }
+
+	   }
+	   
+	   return allAgents;
+   }
    
    
    // create a dictionary for adding resource count to

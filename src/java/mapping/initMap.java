@@ -24,11 +24,9 @@ public class initMap extends DefaultInternalAction {
     	object.createMyLocLogger(agentName);
     	
     	// initialise matrix map size (first agent does it)
-        if ( agentName.equals("collectorHEILMAO_") || agentName.equals("collectorHEILMAO_1") ) { //object.triggerInit == false) {
-        	
-        	System.out.print(agentName);
-        	System.out.println(" initialised the singleton class for the team!");
-        	
+        if ( agentName.equals("collectorHEILMAO_") || agentName.equals("collectorHEILMAO_1") ||
+        		agentName.equals("copmHEILMAO_") || agentName.equals("compHEILMAO_1")) { //object.triggerInit == false) {
+
             // create matrix of game dims
         	object.init(width, height, countOfAgents);
         }

@@ -63,8 +63,8 @@ MAS ia_submission {
 		collectorHEILMAO_ proNav [capacity=5, scan_range=1, group=1, resource_type="gold"] #1;
 		//collectorGOLD_ proNav [capacity=5, scan_range=1, group=1, resource_type="gold"] #1;
 		collectorDIAMOND_ proNav [capacity=5, scan_range=1, group=3, resource_type="diamond"] #1;
-		scanner1HEILMAO_ proNav [capacity=0, scan_range=6, group=2] #1;
-		scanner2HEILMAO_ proNav [capacity=2, scan_range=4, group=4] #1;
+		scanner1HEILMAO_ proNav [capacity=0, scan_range=6, group=2] #2;
+		//scanner2HEILMAO_ proNav [capacity=2, scan_range=4, group=4] #1;
 		
 	aslSourcePath:
 		"src/asl";
