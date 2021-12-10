@@ -17,9 +17,6 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 // init phase, add things here which must be run only once
 +! init[source(Ag)] : Ag == self & init
 		<-	.print("Initialise Stage")
-
-			// clear movement log & reset to zero movement
-			rover.ia.clear_movement_log;
 			
 			// get map size
 			rover.ia.get_map_size(Width,Height);
@@ -79,20 +76,21 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 
 			rover.ia.check_status(Energy); // agent energy
 			?energyTrigger(State);
-			if ( ((Steps * 6) >= Energy) & State == "OK" ){
+			if ( ((Steps * 9 ) >= Energy) & State == "OK" ){
 				.print("Agent almost out of energy, returning to base to deposit ASAP!")
 				
 				// drop all desires, you HAVE TO go back to base now!
 				.drop_all_desires;
-				
-				// deposit remaining resources
-				!deposit_remaining_resources;
-				
+												
 				// set RTB energy trigger to 1
 				NewState = "LOW";
 				-+energyTrigger(NewState);
+				
+				// deposit remaining resources
+				!deposit_remaining_resources;
 			}
-			elif (Energy < 10){
+			elif (((Steps * 6 ) < Energy) & State == "LOW"){
+				.print("Out of energy... killing agent!")
 				.my_name(Me);
 				.kill_agent(Me);
 			}
@@ -169,10 +167,12 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			mapping.updateScanArea(Scanrange, Xrem, Yrem);
 
 			// now actaully scan
-			if (Scanrange > 0){
+			rover.ia.check_status(Energy); // agent energy
+			if (Scanrange > 0 & Energy > (Scanrange * 7.5)){
 				scan(Scanrange);
 			}
 			else{
+				// add some messaging command here...
 				//.wait(2000);
 			}
 
