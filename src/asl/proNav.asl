@@ -30,10 +30,6 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			.my_name(Me);
 			mapping.initMap(Width, Height, Scanrange, Me, Count);
 			
-			// make a belief of all other participants
-			.delete(Me, ListOfAgents, OtherPlayers);
-			+othernames(OtherPlayers);
-			
 			// make a random move with range N
 			?randomwalk_max(N);
 			movement.random_walk(N, X, Y, C);
@@ -84,7 +80,7 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			-+stepsToBase(Steps);
 			?energyTrigger(State);
 
-			if ( ((Steps * 9 ) >= Energy) & State == "OK" ){
+			if ( ((Steps * 12 ) >= Energy) & State == "OK" ){
 				.print("Agent almost out of energy, returning to base to deposit ASAP!")
 				
 				// drop all desires, you HAVE TO go back to base now!
@@ -115,6 +111,8 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 				}
 			}
 			else {
+				rover.ia.get_distance_from_base(Xcurr, Ycurr);
+				mapping.setTileObstacle(Xcurr, Ycurr);
 				.print("--------------------------------------------------")
 				.print("-- ", Me, " of energy... killing agent!--")
 				.print("--------------------------------------------------")
@@ -231,6 +229,8 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			rover.ia.check_status(Energy);
 			if (Energy <= 10){
 				.my_name(Me);
+				rover.ia.get_distance_from_base(Xcurr, Ycurr);
+				mapping.setTileObstacle(Xcurr, Ycurr);
 				.print("--------------------------------------------------")
 				.print("-- ", Me, " of energy... killing agent!--")
 				.print("--------------------------------------------------")
@@ -270,7 +270,16 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 					if (Carrying + I >= Num){
 						.print("All resources collected on this tile, setting to empty...")
 						rover.ia.get_distance_from_base(Xcurr, Ycurr);
-						mapping.setTileEmpty(Xcurr, Ycurr);
+						
+						// scan with pre-defined range
+						rover.ia.check_config(_,Scanrange,_);
+						rover.ia.check_status(Energy); // agent energy
+						if (Scanrange == 1){
+							scan(Scanrange);
+						}
+						else {
+							mapping.setTileEmpty(Xcurr, Ycurr);
+						}
 					}
 				}
 			}
@@ -306,7 +315,16 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 					if (Carrying + I >= Num){
 						.print("All resources collected on this tile, setting to empty...")
 						rover.ia.get_distance_from_base(Xcurr, Ycurr);
-						mapping.setTileEmpty(Xcurr, Ycurr);
+						
+						// scan with pre-defined range
+						rover.ia.check_config(_,Scanrange,_);
+						rover.ia.check_status(Energy); // agent energy
+						if (Scanrange == 1){
+							scan(Scanrange);
+						}
+						else {
+							mapping.setTileEmpty(Xcurr, Ycurr);
+						}
 					}
 				}
 			}

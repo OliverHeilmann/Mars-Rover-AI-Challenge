@@ -84,7 +84,7 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			-+stepsToBase(Steps);
 			?energyTrigger(State);
 
-			if ( ((Steps * 9 ) >= Energy) & State == "OK" ){
+			if ( ((Steps * 15 ) >= Energy) & State == "OK" ){
 				.print("Agent almost out of energy, returning to base to deposit ASAP!")
 				
 				// drop all desires, you HAVE TO go back to base now!

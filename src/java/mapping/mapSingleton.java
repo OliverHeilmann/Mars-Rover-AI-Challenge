@@ -333,6 +333,17 @@ public class mapSingleton {
    }
    
    
+   // if resources have been fully collected, set tile to obstacle
+   public void setTileObstacle(Integer[] myD_base) {
+	   int tile_to_baseX = matrixAdjust(myD_base[0]);
+	   int tile_to_baseY = matrixAdjust(myD_base[1]);
+
+	   // set tile to empty
+	   if (tile_to_baseX != 0 & tile_to_baseY != 0 ) {
+		   wholeMap[tile_to_baseY][tile_to_baseX] = resourceDict_s2i.get("Obstacle");
+	   }
+   }
+   
    // Print the current map belief in console if requested
    public void showMap(int mapType) {
 	   
