@@ -45,7 +45,7 @@ public class newScanLoc extends DefaultInternalAction {
     	int dirDY = 0;
     	
     	// if agent does not have a full cargo then it can look for a new tile to go to
-    	if (carryingResources < maxResources | maxResources == 0) {
+    	if (carryingResources < maxResources | maxResources == 0 ) {
 	    	// find all relative distances to my resource type
 	    	int[][] allMyResourceList = object.myOnMapResources(resourceType, me_to_base);
 	    	

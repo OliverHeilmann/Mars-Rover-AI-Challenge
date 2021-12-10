@@ -1,10 +1,10 @@
 /* ------------- Initial Beliefs ------------- */
 
 init. // delete this belief when init is completed
-randomwalk_max(4). // define the maximum random dX,dY number which can be generated
+randomwalk_max(8). // define the maximum random dX,dY number which can be generated
 carrying(0). // create a carrying capacity belief
 resourceType("None"). //start with belief that can carry any resource
-
+energyTrigger("OK"). // set to "Low" if agent must return to base
 
 /* ------------- Initial Goals ------------- */
 
@@ -65,16 +65,41 @@ resourceType("None"). //start with belief that can carry any resource
 			// get A* route between current position and intended, unify with AstarList
 			// we do XYstart - XYmove to set the value to 'new distance to base'
 			movement.aStarRoute(Xstart, Ystart, Xstart-Xmove, Ystart-Ymove, N, AstarList);
+			
+			// check distance to base energy cost
+			movement.aStarRoute(Xstart, Ystart, Xstart-Xmove, Ystart-Ymove, N, RTBList);
 
-			// now loop through list and do the A* moves!
-			for ( .member(Move, AstarList) ){
-				// unpack values from move
-				.nth(0,Move,XaStar);
-				.nth(1,Move,YaStar);
+			// check if agent is running out of energy, if yes then RTB!
+			// costs 6 energy to move
+			.length(RTBList, Steps);
+
+			rover.ia.check_status(Energy); // agent energy
+			?energyTrigger(State);
+			if ( (Steps * 6 >= Energy) & State == "OK" ){
+				.print("Agent almost out of energy, returning to base to deposit ASAP!")
 				
-				// log move, then actually move
-				rover.ia.log_movement(XaStar, YaStar);
-				move(XaStar, YaStar)
+				// drop all desires, you HAVE TO go back to base now!
+				.drop_all_desires;
+				
+				// deposit remaining resources
+				deposit_remaining_resources
+				
+				// set RTB energy trigger to 1
+				NewState = "LOW";
+				-+energyTrigger(NewState);
+			}
+			// agent still has energy, move as instructed!
+			else {
+				// now loop through list and do the A* moves!
+				for ( .member(Move, AstarList) ){
+					// unpack values from move
+					.nth(0,Move,XaStar);
+					.nth(1,Move,YaStar);
+					
+					// log move, then actually move
+					rover.ia.log_movement(XaStar, YaStar);
+					move(XaStar, YaStar);
+				}
 			};.
 
 // plan failure
@@ -184,11 +209,7 @@ resourceType("None"). //start with belief that can carry any resource
 			// move to location (if at resource and can carry more, move to it directly)
 			?whereScanWas(Xscan, Yscan);
 			rover.ia.get_distance_from_base(Xbase, Ybase);
-			
-			.print("---------->>>>>> To base: ", Xbase, ", ", Ybase);
-			.print("---------->>>>>> Was scan: ", Xscan, ", ", Yscan);
-			.print("---------->>>>>> Was scan: ", Xbase + X -Xscan, ", ",  Ybase + Y -Yscan);
-			
+
 			// do the moves to intended location (with A* movement)
 			!aStarMovement(Xbase + X -Xscan, Ybase + Y -Yscan); // moveX, moveY
 			/*
@@ -226,7 +247,7 @@ resourceType("None"). //start with belief that can carry any resource
 			}.
 			
 // plan failure
-//-! collect_resource(Type, Num, X, Y) : true <- .print("!!!!!!!! collect_resource failed");.		
+-! collect_resource(Type, Num, X, Y) : true <- .print("!!!!!!!! collect_resource failed");.		
 
 
 /* shuttle_resource */

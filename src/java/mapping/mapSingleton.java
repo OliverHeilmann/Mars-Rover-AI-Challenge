@@ -284,14 +284,13 @@ public class mapSingleton {
    
    
    // look at values from current map and select a location with maximum scan effectiveness
-   Double  thresh = 1.5; // make this bigger to put more emphasis on scan_score vs distance_score!!
    public int[] scanNewArea(Integer[] myD_base, int scanRange){
 	   // create placeholder for 1D array containing (dx, dy) from current agent position
 	   int[] theScanLocation = new int[3];
 	   theScanLocation[2] = 0; // set this to 1 when the whole map has been scanned
 	   
 	   Integer me_to_tileX, me_to_tileY;
-	   double total_score = 0.;
+	   double lowestEnergy = Double.POSITIVE_INFINITY;
 	   
 	   // setup variables for appending to matrix
 	   int matSize = 2*scanRange+1;
@@ -312,10 +311,11 @@ public class mapSingleton {
         	   me_to_tileY = mapAdjust(me_to_tileY);
         	   
         	   // calculate distance score (X + Y, where X&Y are +ve and larger is worse)
-        	   int distance_score = Math.abs(me_to_tileX) + Math.abs(me_to_tileY);
+        	   //int distance_score = Math.abs(me_to_tileX) + Math.abs(me_to_tileY);
+        	   int distanceEnergy = Math.abs(me_to_tileX) * 6; // 6 energy to move to location
         	   
         	   // Now count up how many unscanned tiles there are for this location
-        	   int scan_score = 0;
+        	   int tileCount = 0;
 
         	   // top half of matrix
         	   for (int ii=0; ii<=r; ii++) {
@@ -331,7 +331,7 @@ public class mapSingleton {
         			   
         			   // if tile data is 0 (for unscanned), then this is a good place to scan, +1 point
         			   if (wholeMap[tile_to_baseY][tile_to_baseX] == 0) {
-        				   scan_score += 1;
+        				   tileCount += 1; // +7.5 energy scan
         			   }
         		   }
         	   }
@@ -350,7 +350,7 @@ public class mapSingleton {
         			   
         			   // if tile data is 0 (for unscanned), then this is a good place to scan, +1 point
         			   if (wholeMap[tile_to_baseY][tile_to_baseX] == 0) {
-        				   scan_score += 1;
+        				   tileCount += 1; // +7.5 energy scan
         			   }
         			   
         		   }
@@ -360,25 +360,30 @@ public class mapSingleton {
         	   // remember, we are only interested in finding the best place to scan...
         	   // now we also store the distance the agent must travel to get there...
         	   // note, we +1 to distance_score to avoid / by 0 error
-        	   Double currScore = Math.pow(scan_score,2) / (distance_score+1.0);
-        	   if (currScore > total_score) {
+        	   //Double currScore = Math.pow(scan_score,2) / (distance_score+1.0);
+        	   Double energyPerTile = ((distanceEnergy + (7.5 * scanRange)) +1) / (tileCount+1.);
+        	   if (energyPerTile < lowestEnergy) {
         		   
         		   // now check to see if the tile is an obstacle
         		   if (wholeMap[j][i] != resourceDict_s2i.get("Obstacle")) {
         			   // calculate new total score
-            		   total_score = currScore;
+        			   lowestEnergy = energyPerTile;
             		   
             		   // update the movement coordinates to give the agent
             		   theScanLocation[0] = mapAdjust(j - matrixAdjust(myD_base[0]));
             		   theScanLocation[1] = mapAdjust(i - matrixAdjust(myD_base[1]));
         		   }
         	   }
+        	   //System.out.format("%.2f", energyPerTile);
+        	   //System.out.print(" | ");
            }
+           //System.out.println("");
        }
+	   //System.out.println(lowestEnergy);
 	   
 	   // final checks to see if the map has been completely scanned...
 	   // if yes, then set 0 to 1 to show ASL code that process is done
-	   if ( total_score <= 0) {
+	   if ( lowestEnergy <= 0) {
 		   theScanLocation[2] = 1;
 	   }
 
