@@ -52,8 +52,35 @@ public class mapSingleton {
 	   resourceDict_i2s.put(5, "Base");
 	   resourceDict_i2s.put(6, "Me");
 	   resourceDict_i2s.put(7, "Ally");
-	   resourceDict_i2s.put(8, "Enemy");
+	   resourceDict_i2s.put(8, "Enemy"); 
    }
+   
+   
+   // use this Map to add and get current position 
+   private static Map<String, Integer[]> agentMapPosition = new HashMap<String, Integer[]>();
+   public void createMyLocLogger(String myName) {
+	   
+	   // set agent current position to (0,0) i.e. start of base
+	   Integer [] positionRel = new Integer[2];
+	   positionRel[0] = 0;
+	   positionRel[1] = 0;
+	   
+	   // put the location of base
+	   agentMapPosition.put(myName, positionRel);
+   }
+   
+   
+   // update map value for agent in question
+   public void updateMyLocLogger( String myName, Integer[] currPosRel) {
+	   
+	   // replace current position for my agent in map
+	   currPosRel[0] = matrixAdjust( currPosRel[0] );
+	   currPosRel[1] =  matrixAdjust( currPosRel[1] );
+	   
+	   // update coordinates
+	   agentMapPosition.replace(myName, currPosRel);
+   }
+   
    
    
    // create a dictionary for adding resource count to
@@ -491,7 +518,17 @@ public class mapSingleton {
    // modified for world wrapping
    
    // update obstacle map with new obstacles before plotting route to end point
-   private void updateObstacleMap() {
+   private void updateObstacleMap(String myName) {
+	   // first add all my agents onto the obstacle map
+	   for (String key : agentMapPosition.keySet() ) {
+		   Integer[] mapLoc = agentMapPosition.get(key);
+		   
+		   // don't add an obstacle on top of myself!
+		   if (key != myName) {
+			   obstacleMap[mapLoc[0]][mapLoc[1]] = resourceDict_s2i.get(("Obstacle"));
+		   }
+	   };
+
 	   // loop through wholeMap and add the obstacles to the obstacle map
 	   for (int i = 0; i < wholeMap.length; i++) {
            for (int j = 0; j < wholeMap[i].length; j++) {
@@ -502,6 +539,20 @@ public class mapSingleton {
         	   }
            }    
        }
+   }
+   
+   
+   // restore obstacle map to just obstacles, no agents
+   private void restoreObstacleMap(String myName) {
+	   // first add all my agents onto the obstacle map
+	   for (String key : agentMapPosition.keySet() ) {
+		   Integer[] mapLoc = agentMapPosition.get(key);
+		   
+		   // don't add an obstacle on top of myself!
+		   if (key != myName) {
+			   obstacleMap[mapLoc[0]][mapLoc[1]] = 0;
+		   }
+	   }
    }
    
    
@@ -647,10 +698,10 @@ public class mapSingleton {
 
    
    // main function to run a route through the maze
-   public List<List<Integer>> calcAStarRoute(int[] startPoint, int[] endPoint) {
+   public List<List<Integer>> calcAStarRoute(String myName, int[] startPoint, int[] endPoint) {
 	   
 	   	// update the obstacle map before plotting a route (obstacleMap)
-	   	updateObstacleMap();
+	   	updateObstacleMap(myName);
 	   	
 	   	// print for debugging
 	   	//showObstacleMap();
@@ -723,6 +774,9 @@ public class mapSingleton {
         
         // reset tileState to its initial state
         obstacleMap[endX][endY] = tileState;
+        
+        // restore obstacle map (to exclude agent positions)
+        restoreObstacleMap(myName);
         
         // return the array of coordinates the agent should travel via
         return coordList;

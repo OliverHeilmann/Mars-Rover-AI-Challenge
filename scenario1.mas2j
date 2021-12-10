@@ -66,7 +66,7 @@ MAS ia_submission {
 		*/
 		
 		/**** ADD YOUR AGENT(S) HERE *****/
-		collectorHEILMAO_ proNav [capacity=5, scan_range=1, group=1] #1; // mindinspector="gui(cycle,html,history)"
+		collectorHEILMAO_ proNav [capacity=5, scan_range=1, group=1] #2; // mindinspector="gui(cycle,html,history)"
 		//scannerHEILMAO_ proNav [capacity=0, scan_range=6, group=2] #1;
 			
 	aslSourcePath:

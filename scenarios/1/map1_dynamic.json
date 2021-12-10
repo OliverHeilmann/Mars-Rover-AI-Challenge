@@ -6,7 +6,7 @@
     "can_scan_gold": true,
     "can_scan_obstacle": true,
     "energy": "5000",
-    "max_agent_count": 1
+    "max_agent_count": 5
   },
   "artefacts": {
     "dynamic":  {

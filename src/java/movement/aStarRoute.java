@@ -30,6 +30,9 @@ public class aStarRoute extends DefaultInternalAction {
     	// get limits of maxDelta --> will be used to set limit of dX and dY
     	int maxDelta = (int)((NumberTerm) args[4]).solve();
     	
+    	// get agent name
+    	String agentName = args[5].toString();
+    	
     	// Create an array for passing to the SingleObject class function
     	int[] me_to_base = new int[2];
     	int[] tile_to_base = new int[2];
@@ -39,7 +42,7 @@ public class aStarRoute extends DefaultInternalAction {
     	tile_to_base[1] = end_dy;
 
     	// now calculate the best route to take from start to end points
-    	List<List<Integer>> agentPath = object.calcAStarRoute(me_to_base, tile_to_base);
+    	List<List<Integer>> agentPath = object.calcAStarRoute(agentName, me_to_base, tile_to_base);
 
     	// create list of listterms to pass back to ASL code
     	ListTermImpl aStarMoves = new ListTermImpl();
@@ -93,6 +96,6 @@ public class aStarRoute extends DefaultInternalAction {
     	}
         */
         // everything ok, so returns true
-        return un.unifies(aStarMoves, args[5]);
+        return un.unifies(aStarMoves, args[6]);
     }
 }

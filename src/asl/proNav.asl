@@ -33,6 +33,7 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			// make a random move with range N
 			?randomwalk_max(N);
 			movement.random_walk(N, X, Y, C);
+			rover.ia.log_movement(0, 0);
 			
 			// do the moves to intended location (with A*, not simple movement)
 		   	// endDX, endDY, randomThresh
@@ -59,23 +60,28 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 		
 			// get random number for when A* not needed...
 			?randomwalk_max(N);
+			.my_name(Me);
 			
 			// get starting coordinates
 			rover.ia.get_distance_from_base(Xstart, Ystart);
 		
 			// get A* route between current position and intended, unify with AstarList
 			// we do XYstart - XYmove to set the value to 'new distance to base'
-			movement.aStarRoute(Xstart, Ystart, Xstart-Xmove, Ystart-Ymove, N, AstarList);
+			movement.aStarRoute(Xstart, Ystart, Xstart-Xmove, Ystart-Ymove, N, Me, AstarList);
 			
 			// check distance to base energy cost
-			movement.aStarRoute(Xstart, Ystart, Xstart-Xmove, Ystart-Ymove, N, RTBList);
+			movement.aStarRoute(Xstart, Ystart, Xstart-Xmove, Ystart-Ymove, N, Me, RTBList);
 
 			// check if agent is running out of energy, if yes then RTB!
 			// costs 6 energy to move
 			.length(RTBList, Steps);
 
 			rover.ia.check_status(Energy); // agent energy
+			-+stepsToBase(Steps);
 			?energyTrigger(State);
+			
+			.print(State, ", ", Steps, ", ", Energy);
+			
 			if ( ((Steps * 9 ) >= Energy) & State == "OK" ){
 				.print("Agent almost out of energy, returning to base to deposit ASAP!")
 				
@@ -86,25 +92,12 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 				NewState = "LOW";
 				-+energyTrigger(NewState);
 				
-				.print(Scanrange);
-				rover.ia.check_config(_,Scanrange,_);
-				if (Scanrange >= 6){
-					.print("Out of energy... killing agent!")
-					.my_name(Me);
-					.kill_agent(Me);
-				}
-				else {
-					// deposit remaining resources
-					!deposit_remaining_resources;
-				}
+				// deposit remaining resources
+				!deposit_remaining_resources;
 			}
-			elif (((Steps * 6 ) < Energy) & State == "LOW"){
-				.print("Out of energy... killing agent!")
-				.my_name(Me);
-				.kill_agent(Me);
-			}
+
 			// agent still has energy, move as instructed!
-			else {
+			elif (Energy > 6) {
 				// now loop through list and do the A* moves!
 				for ( .member(Move, AstarList) ){
 					// unpack values from move
@@ -116,7 +109,14 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 					// log move, then actually move
 					rover.ia.log_movement(XaStar, YaStar);
 					move(XaStar, YaStar);
+					mapping.updateMyPos(XaStar, YaStar, Me); // put in java map for obstacle avoidance
 				}
+			}
+			else {
+				.print("--------------------------------------------------")
+				.print("-- ", Me, " of energy... killing agent!--")
+				.print("--------------------------------------------------")
+				.kill_agent(Me);
 			};.
 
 // plan failure
@@ -182,7 +182,7 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 			}
 			else{
 				// add some messaging command here...
-				//.wait(2000);
+				//!deposit_remaining_resources
 			}
 
 		   	// print map now (only main agent prints map to console)
@@ -221,7 +221,18 @@ energyTrigger("OK"). // set to "Low" if agent must return to base
 		   	!scan_move;.
 		   	
 // plan failure
--! scan_move : true <- .print("!!!!!!!! scan_move failed");.
+-! scan_move : true
+		<- .print("!!!!!!!! scan_move failed");
+
+			// if basically empty tank, kill agent to save memory
+			rover.ia.check_status(Energy);
+			if (Energy <= 10){
+				.my_name(Me);
+				.print("--------------------------------------------------")
+				.print("-- ", ME, " of energy... killing agent!--")
+				.print("--------------------------------------------------")
+				.kill_agent(Me);
+			};.
 
 
 /* collect_resource */

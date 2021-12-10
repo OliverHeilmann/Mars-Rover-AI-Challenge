@@ -20,6 +20,9 @@ public class initMap extends DefaultInternalAction {
     	String agentName = args[3].toString();
     	int countOfAgents = (int)((NumberTerm) args[4]).solve();
     	
+    	// everyone should add their name to the my location logger (for obstacle avoidance)
+    	object.createMyLocLogger(agentName);
+    	
     	// initialise matrix map size (first agent does it)
         if ( agentName.equals("collectorHEILMAO_") || agentName.equals("collectorHEILMAO_1") ) { //object.triggerInit == false) {
         	

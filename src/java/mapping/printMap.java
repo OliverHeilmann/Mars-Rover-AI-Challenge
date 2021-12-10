@@ -25,6 +25,9 @@ public class printMap extends DefaultInternalAction {
         	
         	// show scan range map (coords are x,y to base)
         	//object.showNeighbourMatrix();
+        	
+        	// show obstacle map
+        	//object.showObstacleMap();
         }
 
         // everything ok, so returns true
