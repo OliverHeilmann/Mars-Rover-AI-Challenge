@@ -13,11 +13,7 @@ MAS ia_submission {
 	agents:
 	
 		collectorHEILMAO_ proNav [capacity=4, scan_range=2, group=1] #5;
-		//collectorGOLD_ proNav [capacity=5, scan_range=1, group=1, resource_type="gold"] #1;
-		//collectorDIAMOND_ proNav [capacity=5, scan_range=1, group=3, resource_type="diamond"] #1;
-		//scanner1HEILMAO_ proNav [capacity=3, scan_range=3, group=2] #2;
-		//scanner2HEILMAO_ proNav [capacity=5, scan_range=1, group=4] #1;
-		
+
 	aslSourcePath:
 		"src/asl";
 }
