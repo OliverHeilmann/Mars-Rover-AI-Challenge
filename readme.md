@@ -1,3 +1,15 @@
+# Getting started with JASON & Agentspeak
+
+To build agents using JASON, you would need to
+1. Java JDK [_click_here_](https://www.oracle.com/java/technologies/javase-jdk15-downloads.html)
+2. Install Eclipse IDE [_click here_](https://www.eclipse.org/downloads/)
+3. Install JASON [_click here_](https://sourceforge.net/projects/jason/files/jason/version%202.4/jason-2.4.zip/download)
+4. Install JASON eclipse plugin [_click here_](http://jason.sourceforge.net/mini-tutorial/eclipse-plugin/)
+
+the links provided are the version this introductory content and your coursework has been built to work seamlessley with.
+
+
+-------------------------------^ WIP ^------------------------------
 
 # Rover CourseWork
 
@@ -265,23 +277,3 @@ __<a name="pia"></a>NOTE__: For this coursework, you are limited to create inter
 
 ### <a name="making_maps"></a>Making your own map
 Custom maps allow you to test your agents' performance under certain conditions. To create custom maps, use the browser based tool available [here](https://github.bath.ac.uk/Intelligent-Agents/rover-world-map-builder). 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

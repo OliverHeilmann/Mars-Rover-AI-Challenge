@@ -7,8 +7,8 @@
 	</classpathentry>
 	<classpathentry excluding="*.asl" kind="src" path="src/asl"/>
 	<classpathentry kind="src" path="src/java"/>
-	<classpathentry kind="lib" path="/Users/Oliver/Documents/CODING/Jason_Prgms/rover-coursework-heilmao/libs/jason-2.4.jar"/>
-	<classpathentry kind="lib" path="/Users/Oliver/Documents/CODING/Jason_Prgms/rover-coursework-heilmao/libs/jason-rover-environment.jar"/>
-	<classpathentry kind="lib" path="/Users/Oliver/Documents/CODING/Jason_Prgms/rover-coursework-heilmao/libs/json-20190722.jar"/>
+	<classpathentry kind="lib" path="/Users/Oliver/Documents/CODING/Jason_Prgms/rover-AI/libs/jason-2.4.jar"/>
+	<classpathentry kind="lib" path="/Users/Oliver/Documents/CODING/Jason_Prgms/rover-AI/libs/jason-rover-environment.jar"/>
+	<classpathentry kind="lib" path="/Users/Oliver/Documents/CODING/Jason_Prgms/rover-AI/libs/json-20190722.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

@@ -12,7 +12,8 @@ MAS ia_submission {
 	
 	agents:
 
-		compHEILMAO_ compNav [capacity=3, scan_range=3, group=1] #1;
+		//compHEILMAO_ compNav [capacity=3, scan_range=3, group=1] #1;
+		collectorHEILMAO_ proNav [capacity=3, scan_range=3, group=1] #2;
 			
 	aslSourcePath:
 		"src/asl";
