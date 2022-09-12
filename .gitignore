@@ -1,1 +1,13 @@
+# the basics
+.ipynb_*
+.DS_Store
+__pycache__
+.vscode
+dep
+.*.cache
+build
+*.json
+*.tiff
+
+# repo specifics
 sc_deposit*

@@ -1,34 +1,36 @@
-# Getting started with JASON & Agentspeak
+# Description
+Rovers must explore unknown terrains in search for precious Mars materials (gold and diamonds). With finite energy, efficient search and collection routes are imperative. This repository contains one approach to the aforementioned problem. Built using JASON, Agentspeak and Java coding languages, rover agents collaborate to overcome various challenges across multiple environments.
 
-To build agents using JASON, you would need to
+[AgentSpeak](https://en.wikipedia.org/wiki/AgentSpeak) is an agent-oriented programming language. It is based on logic programming and the belief–desire–intention software model (BDI) architecture for (cognitive) autonomous agents. 
+
+# High Level Description
+Agent (pink) starts at base (grey square) with a finite number of energy points and a specific scan area (transparent green circle). When resources are found (gold: yellow, diamond: blue), they are collected and transported back to the base before the energy runs out. 
+
+Both moving and scanning cost energy so it is imperative to make efficient use of each action. By remembering which regions have been scanned, and communicating with other allied agents, the most efficient approach is achieved.
+
+![](imgs/ScanArea.png)
+![](imgs/LargeMap.png)
+
+# Video Outputs
+[![](imgs/RoverVid1.png)](https://youtu.be/cgmjhY7fOrc)
+[![](imgs/RoverVid2.png)](https://youtu.be/m-SpANGFcoo)
+
+
+# Getting started with JASON & Agentspeak
+Development setup for JASON & Agentspeak requires the following configurations:
 1. Java JDK [_click_here_](https://www.oracle.com/java/technologies/javase-jdk15-downloads.html)
 2. Install Eclipse IDE [_click here_](https://www.eclipse.org/downloads/)
 3. Install JASON [_click here_](https://sourceforge.net/projects/jason/files/jason/version%202.4/jason-2.4.zip/download)
 4. Install JASON eclipse plugin [_click here_](http://jason.sourceforge.net/mini-tutorial/eclipse-plugin/)
+5. After install, in Eclipse: Right Click on Project > Build Path > Configure Build Path > Add External Jars... > Replace the Jars in directory showing errors
 
-the links provided are the version this introductory content and your coursework has been built to work seamlessley with.
-
-
--------------------------------^ WIP ^------------------------------
-
-# Rover CourseWork
-
-Template project for the Intelligent Agents (CM30174/50206) Rover CourseWork (2021/22 session).
-__`It is important that you read the entire page`__
+(_Note: The versions in provided links are the same as for the presented works._)
 
 
 
-## What you need to get started 
-At this point, we expect that you have installed both eclipse & Jason (version 2.4).
-If you are yet to do so, kindly refer to the lab materials provided on Moodle. 
 
-
-## Submitting your coursework
-You are expected to submit an eclipse jason project with all dependencies included (if you had any).
-The project you submit should contain a clearly named `mas2j` for each scenario `(5 mas2j files are expected in total)`.
-This project has been setup to make this very easy. Feel free to use it as a starting point.
-
-
+# Rover Environment Description
+_Credit to Fahid Mohammed, [@fahidRM](https://github.com/fahidRM) for creating the testing environment and project description below..._
 
 ## Contents
  - [The Environment](#env)
@@ -221,7 +223,7 @@ __*artefact_qty*__: The qty found at that location.
 
 __*x_dist*__: Artefact distance away from agent on the x-axis.
 
-__*y_dist*__: Artefact diatance away from agent on the y-axis.
+__*y_dist*__: Artefact distance away from agent on the y-axis.
 
         Example: resource_found("Gold",10,1,1)
         Example note: The Agent found 10 deposits of gold 1 step away on the x-axis and 1 step away on the y-axis.
